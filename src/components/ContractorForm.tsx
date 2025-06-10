@@ -1,0 +1,897 @@
+"use client";
+import React, { useState, useMemo, useCallback } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import AppBar from './AppBar';
+import { AlertCircle, ArrowUpRight, CheckCircle, FileText, Mail, Search, User } from 'lucide-react';
+import Link from 'next/link';
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useAuth } from '@/lib/AuthContext';
+import Image from 'next/image';
+import { visitorAPI } from "@/lib/api";
+
+
+type PPEKeys =
+  | 'HARD HAT'
+  | 'SAFETY SHOES'
+  | 'OVERALLS'
+  | 'EYE PROTECTION'
+  | 'VEST VEST'
+  | 'EAR PROTECTION'
+  | 'RESPIRATORY EQUIP'
+  | 'GLOVES'
+  | 'DUST MASK'
+  | 'FALL ARREST';
+
+
+type FormData = {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  visitorCategory: string;
+  siteLocation: string;
+  department: string;
+  hostEmployee: string;
+  meetingLocation: string;
+  visitStartDate: string;
+  visitEndDate: string;
+  purpose: string;
+  agreed: string;
+  hazards: {
+    title: string;
+    risk: string | number;
+    selectedControls: string[];
+  }[];
+  ppe: {
+    "HARD HAT": 'N' | 'Y';
+    "SAFETY SHOES": 'N' | 'Y';
+    "OVERALLS": 'N' | 'Y';
+    "EYE PROTECTION": 'N' | 'Y';
+    "VEST VEST": 'N' | 'Y';
+    "EAR PROTECTION": 'N' | 'Y';
+    "RESPIRATORY EQUIP": 'N' | 'Y';
+    "GLOVES": 'N' | 'Y';
+    "DUST MASK": 'N' | 'Y';
+    "FALL ARREST": 'N' | 'Y';
+  };
+};
+
+
+
+interface ContractFormProps {
+  form: FormData;
+
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => void;
+  handleSubmit: (
+    e: React.FormEvent<HTMLFormElement>, updatedForm?: FormData
+  ) => void;
+  setForm: React.Dispatch<React.SetStateAction<FormData>>;
+  setFormType: React.Dispatch<React.SetStateAction<'visitor' | 'contractor'>>;
+}
+
+export default function ContractorForm({ form, handleChange, handleSubmit, setForm, setFormType }: ContractFormProps) {
+  const hazards = useMemo(() => [
+    {
+      title: "Fire",
+      icon: "🔥",
+      controls: ["Fire Fighting equipment", "Emergency exits clear", "Fire exits identified", "Waste materials", "Hot works Permit"],
+    },
+    {
+      title: "Slip Trip Fall",
+      icon: "⚠️",
+      controls: ["Clean as you go", "Report any defects", "Daily Audits", "Safe storage of", "Cordon off area", "Signage in place"],
+    },
+    {
+      title: "Work At Heights",
+      icon: "🪠",
+      controls: ["Harness must be worn", "Cordon area off", "Grounds person", "Certified MEWP", "Check by Engineer", "No work over aisleways", "Signage in place"],
+    },
+    {
+      title: "Pedestrian",
+      icon: "🚶‍♂️",
+      controls: ["Cordon area off", "Signage in place", "Clean as you go"],
+    },
+    {
+      title: "Work Equipment",
+      icon: "🔧",
+      controls: ["Lock out Tag out", "Area isolated", "Equipment 110 volt", "Equipment certificate", "No live work", "CSCS for Forklifts", "MEWP Certificate"],
+    },
+    {
+      title: "Electricity",
+      icon: "⚡",
+      controls: ["Lock out Tag out", "Area isolated", "Equipment 110 volt", "Equipment certificate", "No live work", "Trained Personnel", "RCD Testing"],
+    },
+    {
+      title: "Noise",
+      icon: "🔊",
+      controls: ["Ear Protection worn", "Out of hours work", "Isolate area"],
+    },
+    {
+      title: "Ladder",
+      icon: "🪠",
+      controls: ["Adequate & Tested", "Metal Ladders not in use", "Fall arrest equip in use for over 2 meters", "Correct Ladder angle 1:4", "Ladder to be footed", "Fully opened out"],
+    },
+    {
+      title: "Manual Handling",
+      icon: "💪",
+      controls: ["Training Records", "Use team lifts", "Use lifting aids", "Use correct technique"],
+    },
+    {
+      title: "House Keeping",
+      icon: "🧹",
+      controls: ["Clean as you go", "Signage in place", "Designated storage area", "Daily Audits", "Safe disposal of waste", "Designated Owner"],
+    },
+    {
+      title: "Access Egress",
+      icon: "🚪",
+      controls: ["Warning Signs", "Designate site routes", "Pedestrian barriers", "Traffic Management"],
+    },
+    {
+      title: "Other",
+      icon: "❓",
+      controls: ["Asbestos", "Dust", "Chemicals", "Confined Space", "Lone Working", "Bio Hazard"],
+    },
+  ], []);
+
+
+  const ppeItems: PPEKeys[] = ["HARD HAT", "SAFETY SHOES", "OVERALLS", "EYE PROTECTION", "VEST VEST", "EAR PROTECTION", "RESPIRATORY EQUIP", "GLOVES", "DUST MASK", "FALL ARREST"];
+
+ 
+  const [openHazards, setOpenHazards] = useState<Record<string, boolean>>({});
+  const [selectedHazards, setSelectedHazards] = useState<Record<
+    string,
+    {
+      title: string;
+      risk: string;
+      selectedControls: string[];
+    }
+  >>({});
+  const [loading, setLoading] = useState(false);
+
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  // const [employees, setEmployees] = useState<Employee[]>([]);
+  // const [response, setResponse] = useState<any>(null);
+
+  const [searchEmail, setSearchEmail] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  // const [searchResults, setSearchResults] = useState<string[]>([]);
+
+
+ const toggleControl = (title: string, control: string) => {
+  setSelectedHazards((prev) => {
+    const prevControls = prev[title]?.selectedControls || [];
+    const isSelected = prevControls.includes(control);
+    const updatedControls = isSelected
+      ? prevControls.filter((c) => c !== control)
+      : [...prevControls, control];
+
+    return {
+      ...prev,
+      [title]: {
+        ...prev[title],
+        selectedControls: updatedControls,
+      },
+    };
+  });
+};
+
+const setRisk = (title: string, risk: string) => {
+  setSelectedHazards((prev) => ({
+    ...prev,
+    [title]: {
+      ...prev[title],
+      risk,
+    },
+  }));
+};
+
+console.log(selectedHazards);
+
+
+
+const setPPE = useCallback((item: string, opt: string) => {
+    console.log("setPPE called for:");
+    setForm((prevForm) => ({
+      ...prevForm,
+      ppe: {
+        ...prevForm.ppe,
+        [item]: opt,
+      },
+    }));
+  }, [setForm]);
+
+
+
+
+const toggleHazardBox = useCallback((hazard: string) => {
+    setOpenHazards((prev) => ({
+      ...prev,
+      [hazard]: !prev[hazard],
+    }));
+  }, [])
+
+
+
+const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    const updatedHazards = Object.values(selectedHazards).map((hazard) => ({
+      title: hazard.title,
+      risk: hazard.risk,
+      selectedControls: hazard.selectedControls,
+    }));
+
+    console.log(updatedHazards);
+    console.log(selectedHazards);
+    
+    
+
+    const updatedForm = {
+      ...form,
+      hazards: updatedHazards,
+    };
+
+    // ✅ Don't rely on setForm here — just pass updatedForm directly
+    await handleSubmit(e, updatedForm);
+
+    setSuccess(`Your visit has been scheduled successfully! Please check in at the reception desk when you arrive. ${form.hostEmployee} has been notified of your upcoming visit on ${new Date(form.visitStartDate).toLocaleDateString()}.`);
+  } catch (err) {
+    console.error("Submission error:", err);
+    setError("Something went wrong while submitting the form.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  const { token } = useAuth();
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     if (token) {
+  //       try {
+  //         // Fetch employees
+  //         const employeeData = await employeeAPI.getEmployees(token);
+  //         // setEmployees(employeeData);
+
+  //       } catch (err) {
+  //         console.error('Failed to fetch data:', err);
+  //       }
+  //     }
+  //   };
+
+  //   fetchData();
+
+  //   // Check if there's a returning visitor from the been-here-before page
+  //   if (typeof window !== 'undefined') {
+  //     const returnVisitorData = sessionStorage.getItem('returnVisitor');
+  //     if (returnVisitorData) {
+  //       try {
+  //         const visitor = JSON.parse(returnVisitorData);
+  //         selectReturnVisitor(visitor);
+  //         // Clear the session storage after using it
+  //         sessionStorage.removeItem('returnVisitor');
+  //       } catch (err) {
+  //         console.error('Error parsing return visitor data:', err);
+  //       }
+  //     }
+  //   }
+  // }, [token]);
+
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchEmail(e.target.value);
+  };
+
+  const searchVisitor = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!searchEmail) {
+      setError('Please enter an email address to search');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(searchEmail)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (!token) {
+      setError('Authentication required to search for visitors');
+      return;
+    }
+
+    setIsSearching(true);
+    setError('');
+    setSuccess('');
+    // setSearchResults([]);
+
+    try {
+      // Use the improved API to search for visitors by email
+      const results = await visitorAPI.searchVisitorsByEmail(searchEmail, token);
+
+      if (results.length === 0) {
+        // If no results, show a message but don't set an error
+        // This is a normal case, not an error condition
+        setError('No previous visits found for this email address.');
+      } else {
+        // Sort results by visit date (most recent first)
+        results.sort((a, b) => {
+          const dateA = new Date(a.visitStartDate || a.checkInTime || 0);
+          const dateB = new Date(b.visitStartDate || b.checkInTime || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        setSuccess(`Found ${results.length} previous visit${results.length > 1 ? 's' : ''} for this email.`);
+      }
+
+      // setSearchResults([""]);
+    } catch (err) {
+      console.error('Error searching for visitor:', err);
+      setError(err instanceof Error ? err.message : 'Failed to search for visitor. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // const selectReturnVisitor = (visitor: any) => {
+  //   // Update form with visitor data
+  //   setForm({
+  //     firstName: visitor.firstName,
+  //     lastName: visitor.lastName,
+  //     phone: visitor.phone,
+  //     email: visitor.email,
+  //     hostEmployee: visitor.hostEmployee,
+  //     // company: visitor.company || '',
+  //     siteLocation: visitor.siteLocation || '',
+  //     purpose: '',  // Clear purpose for new visit
+  //     department: visitor.department || '',
+  //     meetingLocation: visitor.meetingLocation || '',
+  //     visitStartDate: new Date().toISOString().slice(0, 16),
+  //     visitEndDate: new Date().toISOString().slice(0, 16),
+  //     vategory: visitor.category === 'CONTRACTOR' ? 'CONTRACTOR' : 'VISITOR',
+  //     agreed: '', // Require agreement again
+  //   });
+
+  //   // Clear search results and input
+  //   setSearchResults([]);
+  //   setSearchEmail('');
+
+  //   // Show success message
+  //   setSuccess('Welcome back! Your information has been filled in. Please update any details if needed and complete the form.');
+
+  //   // Scroll to the first form field that needs attention (purpose)
+  //   setTimeout(() => {
+  //     const purposeElement = document.querySelector('[name="purpose"]');
+  //     if (purposeElement) {
+  //       purposeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  //     }
+  //   }, 100);
+  // };
+
+
+
+
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-white via-indigo-100 to-purple-100 pb-4 sm:pb-8 lg:pb-10">
+      <AppBar />
+      <div className='bg-white rounded-xl sm:rounded-3xl shadow-lg sm:p-6 md:p-8 w-full max-w-8xl sm:mx-4 md:mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mt-4 sm:mt-6  pb-4 sm:pb-20'>
+
+        <div className="p-4 w-full mx-auto space-y-6 bg-white rounded-xl shadow-md mt-2 sm:mt-6 lg:mt-8 xl:mt-10">
+          <h1 className="text-2xl font-bold mb-4">New Contractor
+          </h1>
+          <div className="flex items-center mb-2">
+            <div className="bg-blue-100 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 flex-shrink-0">
+              <User className="h-5 w-5 sm:h-6 sm:w-6 text-blue-700" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-900 leading-tight">Visitor Registration</h1>
+          </div>
+          <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-4">Please fill in your details to register for a contract. Fields marked with * are required.</p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 sm:p-6 rounded-lg mb-4 sm:mb-6 flex items-start">
+              <div className="bg-red-100 p-1.5 sm:p-2 rounded-full mr-3 sm:mr-4 flex-shrink-0">
+                <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+              </div>
+              <div>
+                <p className="font-medium text-base sm:text-lg mb-1 sm:mb-2">Registration Error</p>
+                <p className="text-red-700 text-sm sm:text-base">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 p-4 sm:p-6 rounded-lg mb-4 sm:mb-6 flex items-start">
+              <div className="bg-green-100 p-1.5 sm:p-2 rounded-full mr-3 sm:mr-4 flex-shrink-0">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="font-medium text-base sm:text-lg mb-1 sm:mb-2">Registration Successful!</p>
+                <p className="text-green-700 text-sm sm:text-base">{success}</p>
+                <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-3">
+                  <Link href="/" className="bg-white border border-green-300 text-green-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-50 transition-colors">
+                    Return to Home
+                  </Link>
+                  {/* {response && response._id && (
+                    <Link
+                      href={`/badge/${response._id}`}
+                      className="bg-indigo-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center"
+                    >
+                      <CreditCard className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      View Digital Badge
+                    </Link>
+                  )} */}
+                  <button
+                    type="button"
+                    // onClick={() => setForm({
+                    //   firstName: '',
+                    //   lastName: '', 
+                    //   phone: '',
+                    //   email: '',
+                    //   hostEmployee: '',
+                    //   siteLocation: '',
+                    //   purpose: '',
+                    //   department: '',
+                    //   meetingLocation: '',
+                    //   visitStartDate: new Date().toISOString().slice(0, 16),
+                    //   visitEndDate: new Date().toISOString().slice(0, 16),
+                    //   visitorCategory: 'visitor',
+                    //   agreed: false,
+                    // })}
+                    className="bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-700 transition-colors"
+                  >
+                    Register Another Visitor
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Return Visitor Search */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6 rounded-xl mb-6 sm:mb-8 shadow-sm border border-blue-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+              <div className="flex items-center">
+                <div className="bg-blue-100 p-1.5 sm:p-2.5 rounded-full mr-2 sm:mr-3 flex-shrink-0">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-blue-900">Been Here Before?</h3>
+              </div>
+              <Link
+                href="/been-here-before"
+                className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md transition-colors flex items-center self-start sm:self-auto"
+              >
+                Use dedicated page <ArrowUpRight className="ml-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              </Link>
+            </div>
+            <div className="flex items-start mb-4 sm:mb-5">
+              <div className="bg-blue-100 p-1 sm:p-1.5 rounded-full mr-2 sm:mr-3 mt-0.5 flex-shrink-0">
+                <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+              </div>
+              <p className="text-sm sm:text-base text-gray-700">
+                If you&apos;ve visited us before, enter your email to quickly fill in your information and save time.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="flex-grow relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  className="w-full pl-9 sm:pl-10 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80"
+                  value={searchEmail}
+                  onChange={handleSearchChange}
+                  onKeyDown={(e) => e.key === 'Enter' && searchVisitor(e)}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={searchVisitor}
+                disabled={isSearching || !searchEmail}
+                className="bg-blue-700 hover:bg-blue-800 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg disabled:bg-blue-300 transition-colors flex items-center justify-center whitespace-nowrap shadow-sm text-sm"
+              >
+                {isSearching ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                    Find My Information
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Search Results */}
+            {/* {searchResults.length > 0 ? (
+              <div className="mt-4 sm:mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="bg-blue-50 px-4 sm:px-5 py-2 sm:py-3 border-b border-gray-200 flex items-center">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mr-1.5 sm:mr-2" />
+                  <h5 className="font-medium text-sm sm:text-base text-blue-900">Found {searchResults.length} previous {searchResults.length === 1 ? 'visit' : 'visits'}</h5>
+                </div>
+                <ul className="divide-y divide-gray-200">
+                  {searchResults.map((visitor) => (
+                    <li key={visitor._id} className="p-3 sm:p-5 hover:bg-blue-50 transition-colors">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                        <div>
+                          <div className="flex items-center">
+                            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-white shadow-sm flex-shrink-0">
+                              <span className="text-sm sm:text-base font-medium">
+                                {visitor.firstName?.charAt(0)}{visitor.lastName?.charAt(0)}
+                              </span>
+                            </div>
+                            <div className="overflow-hidden">
+                              <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{visitor.firstName} {visitor.lastName}</p>
+                              <p className="text-xs sm:text-sm text-gray-500 truncate">{visitor.email}</p>
+                            </div>
+                          </div>
+                          <div className="mt-2 sm:mt-3 ml-10 sm:ml-13 grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-1">
+                            <p className="text-xs sm:text-sm text-gray-500 flex items-center">
+                              <Building className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 mr-1.5 sm:mr-2 flex-shrink-0" />
+                              <span className="font-medium mr-1">Company:</span>
+                              <span className="truncate">{visitor.company || 'Not specified'}</span>
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-500 flex items-center">
+                              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 mr-1.5 sm:mr-2 flex-shrink-0" />
+                              <span className="font-medium mr-1">Last visit:</span> {new Date(visitor.visitDate).toLocaleDateString()}
+                            </p>
+                            {visitor.purpose && (
+                              <p className="text-xs sm:text-sm text-gray-500 flex items-start col-span-2 mt-1">
+                                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 mr-1.5 sm:mr-2 mt-0.5 flex-shrink-0" />
+                                <span className="overflow-hidden"><span className="font-medium mr-1">Purpose:</span> <span className="truncate">{visitor.purpose}</span></span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          // onClick={() => selectReturnVisitor(visitor)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center shadow-sm self-start sm:self-center"
+                        >
+                          <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                          Use this information
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : error && error.includes('No previous visits') ? (
+              <div className="mt-4 sm:mt-6 bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-lg flex items-start">
+                <div className="bg-yellow-100 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 flex-shrink-0">
+                  <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm sm:text-base text-yellow-800 mb-0.5 sm:mb-1">No Previous Visits Found</p>
+                  <p className="text-xs sm:text-sm text-yellow-700">
+                    We couldn&apos;t find any previous visits for this email address. Please fill in your information below to register as a new visitor.
+                  </p>
+                </div>
+              </div>
+            ) : success ? (
+              <div className="mt-4 sm:mt-6 bg-green-50 border border-green-200 p-3 sm:p-4 rounded-lg flex items-start">
+                <div className="bg-green-100 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 flex-shrink-0">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm sm:text-base text-green-800 mb-0.5 sm:mb-1">Information Retrieved</p>
+                  <p className="text-xs sm:text-sm text-green-700">
+                    {success}
+                  </p>
+                </div>
+              </div>
+            ) : null} */}
+          </div>
+
+          {/* Personal Information */}
+          <div className="p-2 mx-auto space-y-6 bg-white rounded-xl mt-2 md:mt-4">
+            <form onSubmit={onSubmit} className="space-y-6">
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  <h2 className="text-xl font-semibold">Personal Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} required />
+                    <Input name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} required />
+                    <Input name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} required />
+                    <Input name="email" placeholder="Email Address" value={form.email} onChange={handleChange} />
+                    <Select required value={form.visitorCategory} onValueChange={(value) => setFormType(value as 'visitor' | 'contractor')}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Visitor Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="contractor">Contractor</SelectItem>
+                        <SelectItem value="visitor">Visitor</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* Updated Site Location to use a dropdown */}
+                    <Select value={form.siteLocation} onValueChange={(value) => setForm({ ...form, siteLocation: value })} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Site Location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="site1">Site 1</SelectItem>
+                        <SelectItem value="site2">Site 2</SelectItem>
+                        <SelectItem value="site3">Site 3</SelectItem>
+                        <SelectItem value="dropbox">Dropbox</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Visit Information */}
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  <h2 className="text-xl font-semibold">Visit Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select value={form.department} onValueChange={(value) => setForm({ ...form, department: value })} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hr">HR</SelectItem>
+                        <SelectItem value="engineering">Engineering</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={form.hostEmployee} onValueChange={(value) => setForm({ ...form, hostEmployee: value })} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Host Employee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="john">John</SelectItem>
+                        <SelectItem value="jane">Jane</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={form.meetingLocation} onValueChange={(value) => setForm({ ...form, meetingLocation: value })} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Meeting Location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="confroom1">Conference Room 1</SelectItem>
+                        <SelectItem value="confroom2">Conference Room 2</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor="visit-start">Visit Start Date & Time:</Label>
+                      <Input id="visit-start" type="datetime-local" name="visitStartDate" value={form.visitStartDate} onChange={handleChange} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor="visit-end">Visit End Date & Time:</Label>
+                      <Input id="visit-end" type="datetime-local" name="visitEndDate" value={form.visitEndDate} onChange={handleChange} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Hazards Section */}
+              <Card>
+                <CardContent>
+                  <h1 className="text-3xl font-bold text-center mb-6 border-b pb-2">HAZARD ASSESSMENT AND CONTROLS</h1>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {hazards.map((hazard, index) => (
+                      <div
+                        key={index}
+                        className={`border p-4 rounded-xl shadow-md bg-white cursor-pointer relative ${openHazards[hazard.title] ? "border-blue-500 ring-2 ring-blue-300" : "border-gray-300"
+                          }`}
+                        onClick={() => toggleHazardBox(hazard.title)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xl font-semibold">{hazard.title}</span>
+                          <span className="text-2xl">{hazard.icon}</span>
+                        </div>
+                        <button type="button"
+                          className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 text-xs rounded"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedHazards((prev) => {
+                              if (prev[hazard.title]) {
+                                // Deselect
+                                const newState = { ...prev }
+                                delete newState[hazard.title];
+                                return newState;
+                              } else {
+                                // Select
+                                return {
+                                  ...prev,
+                                  [hazard.title]: {
+                                    title: hazard.title,
+                                    risk: "",
+                                    selectedControls: [],
+                                  },
+                                };
+                              }
+                            });
+                          }}
+
+                        >
+                          {selectedHazards[hazard.title] ? "Deselect" : "Select"}
+                        </button>
+
+                        {openHazards[hazard.title] && (
+                          <>
+                            <div className="mb-2">
+                              <span className="font-medium">Mark Risk:</span>
+                              <div className="flex gap-3 mt-1">
+                                {["H", "M", "L"].map((r) => (
+                                  <label key={r} className="flex items-center gap-1">
+                                    <input
+                                      type="radio"
+                                      name={`risk-${index}`}
+                                      value={r}
+                                      checked={selectedHazards[hazard.title]?.risk === r}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        setRisk(hazard.title, r);
+                                      }}
+                                    />
+                                    {r}
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-medium">Controls:</span>
+                              <div className="mt-1 space-y-1">
+                                {hazard.controls.map((ctrl, i) => (
+                                  <label key={i} className="flex items-center gap-2 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                      type="checkbox"
+                                      className="accent-blue-500"
+                                      checked={selectedHazards[hazard.title]?.selectedControls.includes(ctrl) || false}
+                                      onChange={() => toggleControl(hazard.title, ctrl)}
+                                    />
+                                    <span>{ctrl}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* PPE Section */}
+              <Card>
+                <CardContent>
+                  <h2 className="text-2xl font-bold mb-4">Personnel Protective Equipment</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                    {ppeItems.map((item, idx) => (
+                      <div key={idx} className="border p-2 rounded-xl shadow-sm">
+                        <div className="font-semibold mb-2 text-sm text-center">{item}</div>
+                        <div className="flex justify-center gap-4">
+                          {["Y", "N"].map((opt) => (
+                            <label key={opt} className="flex items-center gap-1 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`ppe-${item}`}
+                                value={opt}
+                                checked={form.ppe[item] === opt}
+                                onChange={() => setPPE(item, opt)}
+                              />
+                              {opt}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+
+                </CardContent>
+              </Card>
+
+              {/* Comments & Submit */}
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  <h2 className="text-xl font-semibold">Comments</h2>
+                  <Textarea placeholder="Comments" className="min-h-[100px]" name="purpose" value={form.purpose}
+                    onChange={handleChange} required />
+
+                  {/* Terms and condition */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-sm mt-4 sm:mt-6">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      Terms and Conditions
+                    </h3>
+
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200 mb-3 sm:mb-4 text-xs sm:text-sm text-gray-700">
+                      <p className="mb-1.5 sm:mb-2">By checking the box below, you agree to:</p>
+                      <ul className="list-disc pl-4 sm:pl-5 space-y-0.5 sm:space-y-1">
+                        <li>Follow all safety and security protocols during your visit</li>
+                        <li>Wear your visitor badge visibly at all times</li>
+                        <li>Be escorted by your host in restricted areas</li>
+                        <li>Provide accurate information for security purposes</li>
+                        <li>Allow your information to be stored in our visitor management system</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="mt-0.5">
+                        <input
+                          type="checkbox"
+                          name="agreed"
+                          id="agreed"
+                          required
+                          // checked={()=> form.agreed}
+                          onChange={handleChange}
+                          className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </div>
+                      <label htmlFor="agreed" className="text-xs sm:text-sm text-gray-700">
+                        I agree to the <a href="#" className="text-blue-600 hover:underline font-medium">Terms and Conditions</a> and acknowledge that my personal information will be processed in accordance with the <a href="#" className="text-blue-600 hover:underline font-medium">Privacy Policy</a>.*
+                      </label>
+                    </div>
+                  </div>
+
+
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4 justify-between">
+                    <Link
+                      href="/"
+                      className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-2 sm:px-4 py-1 sm:py-2 rounded-lg w-full sm:w-auto text-center transition-colors flex items-center justify-center text-sm sm:text-base"
+                    >
+                      <ArrowUpRight className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5 rotate-180" />
+                      Return to Home
+                    </Link>
+                    <Button type='submit' className="mt-4 w-full sm:w-auto" disabled={loading}>
+                      {loading ? 'Submitting...' : 'Submit'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+            </form>
+          </div>
+        </div>
+
+        {/* IMAGE SECTION */}
+        <div className="flex flex-col gap-3 sm:gap-4 items-center justify-center w-full">
+          <div className="relative w-full h-40 sm:h-48 md:h-60 lg:h-96">
+            <Image
+              src="/building.jpeg"
+              alt="Building"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 50vw"
+              style={{ objectFit: 'cover' }}
+              className="rounded-lg sm:rounded-xl"
+              priority
+            />
+          </div>
+          <div className="relative w-full h-40 sm:h-48 md:h-60 lg:h-96">
+            <Image
+              src="/reception.jpeg"
+              alt="Reception"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 50vw"
+              style={{ objectFit: 'cover' }}
+              className="rounded-lg sm:rounded-xl"
+              priority
+            />
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
