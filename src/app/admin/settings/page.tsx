@@ -29,23 +29,23 @@ export default function SettingsPage() {
           <TabsList className="bg-white p-1 shadow-sm rounded-lg border border-gray-200">
             <TabsTrigger value="system" className="flex items-center">
               <Settings className="h-4 w-4 mr-2" />
-              <span>System</span>
+              <span className="hidden lg:block">System</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center">
               <Bell className="h-4 w-4 mr-2" />
-              <span>Notifications</span>
+              <span className="hidden lg:block">Notifications</span>
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center">
               <Shield className="h-4 w-4 mr-2" />
-              <span>Security</span>
+              <span className="hidden lg:block">Security</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center">
               <Users className="h-4 w-4 mr-2" />
-              <span>Users</span>
+              <span className="hidden lg:block">Users</span>
             </TabsTrigger>
             <TabsTrigger value="data" className="flex items-center">
               <Database className="h-4 w-4 mr-2" />
-              <span>Data</span>
+              <span className="hidden lg:block">Data</span>
             </TabsTrigger>
           </TabsList>
 

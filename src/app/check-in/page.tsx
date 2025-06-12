@@ -108,7 +108,7 @@ export default function FormPage() {
       const endpoint = isVisitor ? 'visitor' : 'contractor';
       const dataToSubmit = updatedFormOverride || formData;
 
-      const response = await fetch(`http://localhost:5000/api/forms/${endpoint}`, {
+      const response = await fetch(`https://backend-vms-1.onrender.com/api/forms/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSubmit),

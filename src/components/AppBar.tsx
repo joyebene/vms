@@ -41,6 +41,30 @@ export default function AppBar({ showAuthButtons = true }: AppBarProps) {
     setUserMenuOpen(false);
   };
 
+const handleLanguageChange = async (lang: string) => {
+  setLanguageOpen(false);
+
+  try {
+    const res = await fetch('/api/language', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: lang }),
+    });
+
+    if (!res.ok) throw new Error("Language change failed");
+
+    localStorage.setItem('lang', lang);
+
+    // ✅ Delay to ensure cookie is written
+    setTimeout(() => {
+      window.location.reload();
+    }, 200); // even 100ms can work, but 200ms is safer
+  } catch (error) {
+    console.error('Language change failed:', error);
+  }
+};
+
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,12 +147,12 @@ export default function AppBar({ showAuthButtons = true }: AppBarProps) {
               {languageOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
                   <div className="py-1">
-                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">English</button>
-                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">Français</button>
-                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">Español</button>
-                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">Deutsch</button>
-                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">Italiano</button>
-                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">中文</button>
+                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" onClick={() => handleLanguageChange('en')}>English</button>
+                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" onClick={() => handleLanguageChange('fr')}>Français</button>
+                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" onClick={() => handleLanguageChange('es')}>Español</button>
+                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" onClick={() => handleLanguageChange('de')}>Deutsch</button>
+                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" onClick={() => handleLanguageChange('it')}>Italiano</button>
+                    <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" onClick={() => handleLanguageChange('zh')}>中文</button>
                   </div>
                 </div>
               )}
@@ -231,17 +255,7 @@ export default function AppBar({ showAuthButtons = true }: AppBarProps) {
                               Profile
                             </div>
                           </Link>
-                          <Link
-                            href="/settings"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setUserMenuOpen(false)}
-                          >
-                            <div className="flex items-center">
-                              <Settings className="mr-2 h-4 w-4" />
-                              Settings
-                            </div>
-                          </Link>
-                          <button
+                          <button type='button'
                             onClick={handleLogout}
                             className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                           >
@@ -489,12 +503,12 @@ export default function AppBar({ showAuthButtons = true }: AppBarProps) {
               </button>
               {languageOpen && (
                 <div className="pl-3 space-y-1">
-                  <button className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">English</button>
-                  <button className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Français</button>
-                  <button className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Español</button>
-                  <button className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Deutsch</button>
-                  <button className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Italiano</button>
-                  <button className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">中文</button>
+                  <button onClick={() => handleLanguageChange("en")} className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">English</button>
+                  <button onClick={() => handleLanguageChange("fr")} className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Français</button>
+                  <button onClick={() => handleLanguageChange("es")} className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Español</button>
+                  <button onClick={() => handleLanguageChange("de")} className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Deutsch</button>
+                  <button onClick={() => handleLanguageChange("it")} className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Italiano</button>
+                  <button onClick={() => handleLanguageChange("zh")} className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">中文</button>
                 </div>
               )}
             </div>

@@ -286,7 +286,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} QuickPass Visitor Management System. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} QuickPass Visitor Management System. <Link href="https://wa.me/message/V64INIRXSEJNC1">POWERED BY ATLAS TECH CORPORATION.</Link> All rights reserved.</p>
           </div>
         </div>
       </footer>
