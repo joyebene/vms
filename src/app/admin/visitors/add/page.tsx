@@ -74,12 +74,12 @@ export default function AddVisitorPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/schedulevisit`, {
+      const response = await fetch(`https://backend-vms-1.onrender.com/api/admin/schedulevisit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
+ 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Submission failed');
