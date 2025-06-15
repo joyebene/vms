@@ -1,3 +1,4 @@
+"use client";
 import { useState } from 'react';
 import { PaperPlaneIcon } from '@radix-ui/react-icons';
 import AppBar from '@/components/AppBar';
