@@ -16,9 +16,9 @@ import {
   UserPlus,
   FileText,
   BookOpen,
-  Shield,
   LayoutDashboard
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface AppBarProps {
   showAuthButtons?: boolean;
@@ -68,15 +68,16 @@ const handleLanguageChange = async (lang: string) => {
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-18">
           {/* Logo and primary navigation */}
           <div className="flex flex-1">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="flex items-center">
-                <div className="bg-blue-700 text-white p-1.5 rounded mr-2">
-                  <Shield className="h-5 w-5" />
+                <div className="p-1.5 rounded mr-2">
+                  {/* <Shield className="h-5 w-5" /> */}
+                  <Image src="/vms-logo.jpg" width={65} height={65} alt="img" className='object-cover w-10 h-10 md:w-16 md:h-16' />
                 </div>
-                <span className="text-xl sm:text-2xl font-bold text-blue-800">QuickPass</span>
+                <span className="text-xl sm:text-2xl font-bold text-blue-800">FV VMS</span>
               </Link>
             </div>
 

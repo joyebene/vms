@@ -8,14 +8,11 @@ import {
   Users, Calendar, Clock, BarChart2, ArrowUp, FileText, BookOpen
 } from 'lucide-react';
 
-import { visitorAPI, analyticsAPI, newVisitorAPI } from '@/lib/api';
+import { visitorAPI, analyticsAPI, newVisitorAPI, VisitorForm } from '@/lib/api';
 import AnalyticsDashboard from '@/components/charts/AnalyticsDashboard';
 
 export default function AdminDashboard() {
-  const [startDate] = useState<string>(
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  );
-  const [endDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
   const [visitorStats, setVisitorStats] = useState({
     total: 0,
     checkedIn: 0,
@@ -24,8 +21,10 @@ export default function AdminDashboard() {
     pending: 0,
     approved: 0,
   });
-  const [filteredVisitors, setFilteredVisitors] = useState([]);
+  const [filteredVisitors, setFilteredVisitors] = useState<VisitorForm[]>([]);
+  const [filteredContractors, setFilteredcontractors] = useState<VisitorForm[]>([]);
   const [filteredScheduleVisit, setFilteredScheduleVisit] = useState([]);
+  const [checkedOut, setCheckedOut] = useState<VisitorForm[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user, token } = useAuth();
 
@@ -33,13 +32,25 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const visitorData = await newVisitorAPI.getAll();
-      const scheduleVisitData = await newVisitorAPI.getAllSchedule(); 
-      setFilteredVisitors(visitorData);
+      const scheduleVisitData = await newVisitorAPI.getAllSchedule();
+      const visitors = visitorData.filter(v => v.visitorCategory === "visitor")
+      setFilteredVisitors(visitors);
+      const contractors = visitorData.filter(v => v.visitorCategory === "contractor");
+
+      const checkedout = visitorData.filter(v => {
+        const visitEnd = new Date(v.visitEndDate);
+        const now = new Date();
+        return visitEnd < now;
+      });
+      setCheckedOut(checkedout);
+
+
+      setFilteredcontractors(contractors);
       setFilteredScheduleVisit(scheduleVisitData);
 
       console.log(filteredVisitors);
       console.log(filteredScheduleVisit);
-      
+
     } catch (err) {
       console.error('Error fetching visitors:', err);
     } finally {
@@ -150,13 +161,16 @@ export default function AdminDashboard() {
 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-gray-500 text-sm font-medium">Currently Checked In</h3>
+            <h3 className="text-gray-500 text-sm font-medium">Total Contractors</h3>
             <div className="bg-green-100 p-2 rounded-lg">
-              <Clock className="h-5 w-5 text-green-600" />
+              <Users className="h-5 w-5 text-blue-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold mt-2">{isLoading ? '...' : visitorStats.checkedIn}</p>
-          <p className="text-gray-500 text-sm mt-2">Active visitors</p>
+          <p className="text-3xl font-bold mt-2">{isLoading ? '...' : filteredContractors.length}</p>
+          <p className="text-green-500 text-sm mt-2 flex items-center">
+            <ArrowUp className="h-3 w-3 mr-1" />
+            <span>12% from last month</span>
+          </p>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
@@ -177,7 +191,7 @@ export default function AdminDashboard() {
               <Clock className="h-5 w-5 text-purple-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold mt-2">{isLoading ? '...' : visitorStats.checkedOut}</p>
+          <p className="text-3xl font-bold mt-2">{isLoading ? '...' : checkedOut.length}</p>
           <p className="text-gray-500 text-sm mt-2">Completed visits</p>
         </div>
       </div>
@@ -251,8 +265,8 @@ export default function AdminDashboard() {
           <p className="text-gray-600 mt-1">View recent visitor activity</p>
         </div>
 
-        <div className="p-6">
-          <VisitHistoryTable startDate={startDate} endDate={endDate} />
+        <div className="p-2 sm:p-4 lg:p-6">
+          <VisitHistoryTable />
         </div>
       </div>
     </>

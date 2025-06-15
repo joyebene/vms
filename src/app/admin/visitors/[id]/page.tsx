@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
-import { visitorAPI, Visitor } from '@/lib/api';
+import { newVisitorAPI, visitorAPI, VisitorForm } from '@/lib/api';
 import { ArrowLeft, QrCode, LogOut, Clock, BookOpen, CreditCard, FileText, AlertCircle } from 'lucide-react';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import EnhancedTrainingModule from '@/components/EnhancedTrainingModule';
@@ -12,7 +12,7 @@ import DocumentUploader from '@/components/DocumentUploader';
 import EnhancedDocumentViewer from '@/components/EnhancedDocumentViewer';
 
 export default function VisitorDetails() {
-  const [visitor, setVisitor] = useState<Visitor | null>(null);
+  const [visitor, setVisitor] = useState<VisitorForm | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -36,21 +36,17 @@ export default function VisitorDetails() {
 
   useEffect(() => {
     const fetchVisitor = async () => {
-      if (!id || !token) return;
+      if (!id) return;
 
       try {
         setIsLoading(true);
         const visitorId = Array.isArray(id) ? id[0] : id;
 
-        // Check if the ID is "add" - this shouldn't happen now that we have a separate page,
-        // but it's good to have this check as a fallback
-        if (visitorId === "add") {
-          router.push("/admin/visitors/add");
-          return;
-        }
-
-        const data = await visitorAPI.getVisitorById(visitorId, token);
+        const data = await newVisitorAPI.getSingleVisitorById(visitorId);
+        console.log(data);
+        
         setVisitor(data);
+      
       } catch (err) {
         console.error('Error fetching visitor:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch visitor details');
@@ -60,7 +56,7 @@ export default function VisitorDetails() {
     };
 
     fetchVisitor();
-  }, [id, token, router]);
+  }, [id, router]);
 
   const handleCheckIn = async () => {
     if (!visitor || !id || !token) return;
@@ -125,7 +121,7 @@ export default function VisitorDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-0">
       {/* QR Code Modal */}
       {showQrCode && visitor && token && (
         <QRCodeDisplay
@@ -208,51 +204,58 @@ export default function VisitorDetails() {
               <div className="mt-8 flex flex-wrap gap-4">
                 <button
                   onClick={() => setShowQrCode(true)}
-                  className="flex items-center bg-blue-900 text-white px-4 py-2 rounded-lg"
+                  className="flex items-center bg-blue-900 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg text-sm md:text-base"
                 >
-                  <QrCode className="mr-2 h-5 w-5" />
+                  <QrCode className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                   Show QR Code
                 </button>
 
                 <Link
                   href={`/badge/${visitor._id}`}
-                  className="flex items-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="flex items-center bg-indigo-600 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm md:text-base"
                 >
-                  <CreditCard className="mr-2 h-5 w-5" />
+                  <CreditCard className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                   View Badge
                 </Link>
 
                 <button
                   onClick={() => setShowTraining(true)}
-                  className={`flex items-center ${visitor.trainingCompleted ? 'bg-green-600' : 'bg-yellow-600'} text-white px-4 py-2 rounded-lg`}
+                  className={`flex items-center ${visitor.trainingCompleted ? 'bg-green-600' : 'bg-yellow-600'} text-white px-2 md:px-4 py-1 md:py-2 rounded-lg text-sm ms:text-base`}
                 >
-                  <BookOpen className="mr-2 h-5 w-5" />
+                  <BookOpen className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                   {visitor.trainingCompleted ? 'Training Completed' : 'Take Safety Training'}
                 </button>
-
-                <button
+                {visitor.visitorCategory === "contractor" && (
+                  <button
                   onClick={() => setShowDocuments(!showDocuments)}
-                  className="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+                  className="flex items-center bg-purple-600 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg hover:bg-purple-700 text-sm md:text-base"
                 >
-                  <FileText className="mr-2 h-5 w-5" />
+                  <FileText className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                   {showDocuments ? 'Hide Documents' : 'Manage Documents'}
+                  {showDocuments && (
+                    <div>
+                      {documentsUpdated}
+                    </div>
+                  )}
                 </button>
+                )}
+                
 
                 {visitor.status === 'approved' && (
                   <button
                     onClick={handleCheckIn}
                     disabled={checkingIn || (visitor.trainingCompleted === false)}
-                    className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg disabled:bg-green-300"
+                    className="flex items-center bg-green-600 text-white px-2 md:px-4 py-1 lg:py-2 rounded-lg disabled:bg-green-300 text-sm md:text-base"
                     title={visitor.trainingCompleted === false ? 'Complete safety training before check-in' : ''}
                   >
-                    <Clock className="mr-2 h-5 w-5" />
+                    <Clock className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                     {checkingIn ? 'Processing...' : 'Check In'}
                   </button>
                 )}
 
                 {visitor.status === 'pending' && (
-                  <div className="flex items-center bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg">
-                    <AlertCircle className="mr-2 h-5 w-5" />
+                  <div className="flex items-center bg-yellow-100 text-yellow-800 px-2 md:px-4 py-1 md:py-2 rounded-lg">
+                    <AlertCircle className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                     Pending Approval
                   </div>
                 )}
@@ -261,9 +264,9 @@ export default function VisitorDetails() {
                   <button
                     onClick={handleCheckOut}
                     disabled={checkingOut}
-                    className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg disabled:bg-red-300"
+                    className="flex items-center bg-red-600 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg disabled:bg-red-300 text-sm md:text-base"
                   >
-                    <LogOut className="mr-2 h-5 w-5" />
+                    <LogOut className="mr-2 w-4 h-4 md:h-5 md:w-5" />
                     {checkingOut ? 'Processing...' : 'Check Out'}
                   </button>
                 )}
@@ -306,7 +309,7 @@ export default function VisitorDetails() {
   );
 }
 
-function VisitorInfo({ visitor }: { visitor: Visitor }) {
+function VisitorInfo({ visitor }: { visitor: VisitorForm }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
@@ -322,11 +325,7 @@ function VisitorInfo({ visitor }: { visitor: Visitor }) {
           </div>
           <div>
             <p className="text-sm text-gray-500">Phone</p>
-            <p className="font-medium">{visitor.phoneNumber}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Company</p>
-            <p className="font-medium">{visitor.company || 'N/A'}</p>
+            <p className="font-medium">{visitor.phone}</p>
           </div>
         </div>
       </div>
@@ -358,15 +357,14 @@ function VisitorInfo({ visitor }: { visitor: Visitor }) {
             <p className="text-sm text-gray-500">Visit End Date & Time</p>
             <p className="font-medium">{visitor.visitEndDate ? new Date(visitor.visitEndDate).toLocaleString() : 'Not specified'}</p>
           </div>
-          {visitor.category === 'CONTRACTOR' && visitor.siteLocation && (
             <div>
               <p className="text-sm text-gray-500">Site Location</p>
               <p className="font-medium">{visitor.siteLocation}</p>
             </div>
-          )}
+      
           <div>
             <p className="text-sm text-gray-500">Visitor Category</p>
-            <p className="font-medium">{visitor.category || 'Not specified'}</p>
+            <p className="font-medium">{visitor.visitorCategory || 'Not specified'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Status</p>
@@ -381,7 +379,8 @@ function VisitorInfo({ visitor }: { visitor: Visitor }) {
               </span>
             </p>
           </div>
-          <div>
+          {visitor.visitorCategory === 'contractor' && (
+            <div>
             <p className="text-sm text-gray-500">Training</p>
             <p className="font-medium">
               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
@@ -390,6 +389,8 @@ function VisitorInfo({ visitor }: { visitor: Visitor }) {
               </span>
             </p>
           </div>
+          )}
+          
           {visitor.checkInTime && (
             <div>
               <p className="text-sm text-gray-500">Check-in Time</p>

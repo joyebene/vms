@@ -3,6 +3,13 @@ import React, { useEffect, useState } from 'react';
 import ContractorForm from '@/components/ContractorForm';
 import VisitorForm from '@/components/VisitorForm';
 
+
+
+type DocumentItem =
+  | { name: string; file: File }
+  | { name: string; url: string; type?: string; uploadedAt?: string };
+
+
 type FormData = {
   firstName: string;
   lastName: string;
@@ -34,6 +41,7 @@ type FormData = {
     "DUST MASK": 'N' | 'Y';
     "FALL ARREST": 'N' | 'Y';
   };
+   documents: DocumentItem[];
 };
 
 const defaultVisitorForm = (formType: string) => ({
@@ -67,20 +75,24 @@ const defaultContractorForm = (formType: string): FormData => ({
     "DUST MASK": 'N',
     "FALL ARREST": 'N',
   },
+  documents: [],
 });
 
 export default function FormPage() {
   const [formType, setFormType] = useState<'visitor' | 'contractor'>('visitor');
   const [visitorForm, setVisitorForm] = useState(defaultVisitorForm('visitor'));
   const [contractorForm, setContractorForm] = useState(defaultContractorForm('contractor'));
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
- useEffect(() => {
-  if (formType === 'visitor') {
-    setVisitorForm((prev) => ({ ...prev, visitorCategory: formType }));
-  } else {
-    setContractorForm((prev) => ({ ...prev, visitorCategory: formType }));
-  }
-}, [formType]);
+
+  useEffect(() => {
+    if (formType === 'visitor') {
+      setVisitorForm((prev) => ({ ...prev, visitorCategory: formType }));
+    } else {
+      setContractorForm((prev) => ({ ...prev, visitorCategory: formType }));
+    }
+  }, [formType]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -95,12 +107,12 @@ export default function FormPage() {
   };
 
   console.log(contractorForm);
-  
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, updatedFormOverride?:FormData) => {
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, updatedFormOverride?: FormData) => {
     e.preventDefault();
 
-     
+
 
     try {
       const isVisitor = formType === 'visitor';
@@ -128,9 +140,12 @@ export default function FormPage() {
         setContractorForm(defaultContractorForm(formType));
       }
 
+      setSuccess(`Your visit has been scheduled successfully! Please check in at the reception desk when you arrive. ${formType === "visitor" ? visitorForm.hostEmployee : contractorForm.hostEmployee} has been notified of your upcoming visit on ${new Date(formType === "contractor" ? visitorForm.visitStartDate : contractorForm.visitStartDate).toLocaleDateString()}.`);
       alert(`${formType === 'visitor' ? 'Visitor' : 'Contractor'} Form submitted successfully!`);
+
     } catch (error) {
       console.error('Submission failed:', error);
+      setError('Your form was not submitted. Please try again.');
       alert('Something went wrong. Please try again.');
     }
   };
@@ -144,6 +159,8 @@ export default function FormPage() {
           handleChange={handleChange}
           handleSubmit={handleSubmit}
           setFormType={setFormType}
+          error={error}
+          success={success}
         />
       ) : (
         <ContractorForm
@@ -152,6 +169,8 @@ export default function FormPage() {
           handleChange={handleChange}
           handleSubmit={handleSubmit}
           setFormType={setFormType}
+          error={error}
+          success={success}
         />
       )}
     </>

@@ -158,7 +158,7 @@ export default function AnalyticsDashboard({ refreshInterval = 60000 }: Analytic
                 name="startDate"
                 value={dateRange.startDate}
                 onChange={handleDateRangeChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="mt-1 block w-[80%] md:w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
             </div>
             <div>
@@ -171,7 +171,7 @@ export default function AnalyticsDashboard({ refreshInterval = 60000 }: Analytic
                 name="endDate"
                 value={dateRange.endDate}
                 onChange={handleDateRangeChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="mt-1 block w-[80%] md:w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
             </div>
           </div>

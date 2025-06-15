@@ -14,6 +14,11 @@ import Image from 'next/image';
 import { visitorAPI } from "@/lib/api";
 
 
+type DocumentItem =
+  | { name: string; file: File }
+  | { name: string; url: string; type?: string; uploadedAt?: string };
+
+
 type PPEKeys =
   | 'HARD HAT'
   | 'SAFETY SHOES'
@@ -58,6 +63,7 @@ type FormData = {
     "DUST MASK": 'N' | 'Y';
     "FALL ARREST": 'N' | 'Y';
   };
+  documents: DocumentItem[];
 };
 
 
@@ -73,9 +79,11 @@ interface ContractFormProps {
   ) => void;
   setForm: React.Dispatch<React.SetStateAction<FormData>>;
   setFormType: React.Dispatch<React.SetStateAction<'visitor' | 'contractor'>>;
+  error: string;
+  success: string;
 }
 
-export default function ContractorForm({ form, handleChange, handleSubmit, setForm, setFormType }: ContractFormProps) {
+export default function ContractorForm({ form, handleChange, handleSubmit, setForm, setFormType, error, success }: ContractFormProps) {
   const hazards = useMemo(() => [
     {
       title: "Fire",
@@ -142,7 +150,7 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
 
   const ppeItems: PPEKeys[] = ["HARD HAT", "SAFETY SHOES", "OVERALLS", "EYE PROTECTION", "VEST VEST", "EAR PROTECTION", "RESPIRATORY EQUIP", "GLOVES", "DUST MASK", "FALL ARREST"];
 
- 
+
   const [openHazards, setOpenHazards] = useState<Record<string, boolean>>({});
   const [selectedHazards, setSelectedHazards] = useState<Record<
     string,
@@ -154,49 +162,42 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
   >>({});
   const [loading, setLoading] = useState(false);
 
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  // const [employees, setEmployees] = useState<Employee[]>([]);
-  // const [response, setResponse] = useState<any>(null);
 
   const [searchEmail, setSearchEmail] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  // const [searchResults, setSearchResults] = useState<string[]>([]);
+  const toggleControl = (title: string, control: string) => {
+    setSelectedHazards((prev) => {
+      const prevControls = prev[title]?.selectedControls || [];
+      const isSelected = prevControls.includes(control);
+      const updatedControls = isSelected
+        ? prevControls.filter((c) => c !== control)
+        : [...prevControls, control];
 
+      return {
+        ...prev,
+        [title]: {
+          ...prev[title],
+          selectedControls: updatedControls,
+        },
+      };
+    });
+  };
 
- const toggleControl = (title: string, control: string) => {
-  setSelectedHazards((prev) => {
-    const prevControls = prev[title]?.selectedControls || [];
-    const isSelected = prevControls.includes(control);
-    const updatedControls = isSelected
-      ? prevControls.filter((c) => c !== control)
-      : [...prevControls, control];
-
-    return {
+  const setRisk = (title: string, risk: string) => {
+    setSelectedHazards((prev) => ({
       ...prev,
       [title]: {
         ...prev[title],
-        selectedControls: updatedControls,
+        risk,
       },
-    };
-  });
-};
+    }));
+  };
 
-const setRisk = (title: string, risk: string) => {
-  setSelectedHazards((prev) => ({
-    ...prev,
-    [title]: {
-      ...prev[title],
-      risk,
-    },
-  }));
-};
-
-console.log(selectedHazards);
+  console.log(selectedHazards);
 
 
 
-const setPPE = useCallback((item: string, opt: string) => {
+  const setPPE = useCallback((item: string, opt: string) => {
     console.log("setPPE called for:");
     setForm((prevForm) => ({
       ...prevForm,
@@ -210,7 +211,7 @@ const setPPE = useCallback((item: string, opt: string) => {
 
 
 
-const toggleHazardBox = useCallback((hazard: string) => {
+  const toggleHazardBox = useCallback((hazard: string) => {
     setOpenHazards((prev) => ({
       ...prev,
       [hazard]: !prev[hazard],
@@ -219,73 +220,38 @@ const toggleHazardBox = useCallback((hazard: string) => {
 
 
 
-const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setLoading(true);
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const updatedHazards = Object.values(selectedHazards).map((hazard) => ({
-      title: hazard.title,
-      risk: hazard.risk,
-      selectedControls: hazard.selectedControls,
-    }));
+    try {
+      const updatedHazards = Object.values(selectedHazards).map((hazard) => ({
+        title: hazard.title,
+        risk: hazard.risk,
+        selectedControls: hazard.selectedControls,
+      }));
 
-    console.log(updatedHazards);
-    console.log(selectedHazards);
-    
-    
+      console.log(updatedHazards);
+      
 
-    const updatedForm = {
-      ...form,
-      hazards: updatedHazards,
-    };
+      const updatedForm = {
+        ...form,
+        hazards: updatedHazards,
+      };
 
-    // ✅ Don't rely on setForm here — just pass updatedForm directly
-    await handleSubmit(e, updatedForm);
+      // ✅ Don't rely on setForm here — just pass updatedForm directly
+      await handleSubmit(e, updatedForm);
 
-    setSuccess(`Your visit has been scheduled successfully! Please check in at the reception desk when you arrive. ${form.hostEmployee} has been notified of your upcoming visit on ${new Date(form.visitStartDate).toLocaleDateString()}.`);
-  } catch (err) {
-    console.error("Submission error:", err);
-    setError("Something went wrong while submitting the form.");
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (err) {
+      console.error("Submission error:", err);
+
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const { token } = useAuth();
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if (token) {
-  //       try {
-  //         // Fetch employees
-  //         const employeeData = await employeeAPI.getEmployees(token);
-  //         // setEmployees(employeeData);
-
-  //       } catch (err) {
-  //         console.error('Failed to fetch data:', err);
-  //       }
-  //     }
-  //   };
-
-  //   fetchData();
-
-  //   // Check if there's a returning visitor from the been-here-before page
-  //   if (typeof window !== 'undefined') {
-  //     const returnVisitorData = sessionStorage.getItem('returnVisitor');
-  //     if (returnVisitorData) {
-  //       try {
-  //         const visitor = JSON.parse(returnVisitorData);
-  //         selectReturnVisitor(visitor);
-  //         // Clear the session storage after using it
-  //         sessionStorage.removeItem('returnVisitor');
-  //       } catch (err) {
-  //         console.error('Error parsing return visitor data:', err);
-  //       }
-  //     }
-  //   }
-  // }, [token]);
 
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -295,27 +261,20 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   const searchVisitor = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!searchEmail) {
-      setError('Please enter an email address to search');
-      return;
-    }
-
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(searchEmail)) {
-      setError('Please enter a valid email address');
+      alert('Please enter a valid email address');
       return;
     }
 
     if (!token) {
-      setError('Authentication required to search for visitors');
+      console.log("Token expired!!!")
       return;
     }
 
     setIsSearching(true);
-    setError('');
-    setSuccess('');
-    // setSearchResults([]);
+
 
     try {
       // Use the improved API to search for visitors by email
@@ -323,8 +282,7 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
       if (results.length === 0) {
         // If no results, show a message but don't set an error
-        // This is a normal case, not an error condition
-        setError('No previous visits found for this email address.');
+        // This is a normal case, not an error condit
       } else {
         // Sort results by visit date (most recent first)
         results.sort((a, b) => {
@@ -333,52 +291,33 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           return dateB.getTime() - dateA.getTime();
         });
 
-        setSuccess(`Found ${results.length} previous visit${results.length > 1 ? 's' : ''} for this email.`);
+        // setSuccess(`Found ${results.length} previous visit${results.length > 1 ? 's' : ''} for this email.`);
       }
 
-      // setSearchResults([""]);
+
     } catch (err) {
       console.error('Error searching for visitor:', err);
-      setError(err instanceof Error ? err.message : 'Failed to search for visitor. Please try again.');
     } finally {
       setIsSearching(false);
     }
   };
 
-  // const selectReturnVisitor = (visitor: any) => {
-  //   // Update form with visitor data
-  //   setForm({
-  //     firstName: visitor.firstName,
-  //     lastName: visitor.lastName,
-  //     phone: visitor.phone,
-  //     email: visitor.email,
-  //     hostEmployee: visitor.hostEmployee,
-  //     // company: visitor.company || '',
-  //     siteLocation: visitor.siteLocation || '',
-  //     purpose: '',  // Clear purpose for new visit
-  //     department: visitor.department || '',
-  //     meetingLocation: visitor.meetingLocation || '',
-  //     visitStartDate: new Date().toISOString().slice(0, 16),
-  //     visitEndDate: new Date().toISOString().slice(0, 16),
-  //     vategory: visitor.category === 'CONTRACTOR' ? 'CONTRACTOR' : 'VISITOR',
-  //     agreed: '', // Require agreement again
-  //   });
 
-  //   // Clear search results and input
-  //   setSearchResults([]);
-  //   setSearchEmail('');
+const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (!files) return;
 
-  //   // Show success message
-  //   setSuccess('Welcome back! Your information has been filled in. Please update any details if needed and complete the form.');
+  const uploadedDocs: DocumentItem[] = Array.from(files).map((file) => ({
+    name: file.name,
+    file,
+  }));
 
-  //   // Scroll to the first form field that needs attention (purpose)
-  //   setTimeout(() => {
-  //     const purposeElement = document.querySelector('[name="purpose"]');
-  //     if (purposeElement) {
-  //       purposeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  //     }
-  //   }, 100);
-  // };
+  setForm((prev) => ({
+    ...prev,
+    documents: [...(prev.documents || []), ...uploadedDocs],
+  }));
+};
+
 
 
 
@@ -520,86 +459,6 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 )}
               </button>
             </div>
-
-            {/* Search Results */}
-            {/* {searchResults.length > 0 ? (
-              <div className="mt-4 sm:mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="bg-blue-50 px-4 sm:px-5 py-2 sm:py-3 border-b border-gray-200 flex items-center">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mr-1.5 sm:mr-2" />
-                  <h5 className="font-medium text-sm sm:text-base text-blue-900">Found {searchResults.length} previous {searchResults.length === 1 ? 'visit' : 'visits'}</h5>
-                </div>
-                <ul className="divide-y divide-gray-200">
-                  {searchResults.map((visitor) => (
-                    <li key={visitor._id} className="p-3 sm:p-5 hover:bg-blue-50 transition-colors">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                        <div>
-                          <div className="flex items-center">
-                            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-white shadow-sm flex-shrink-0">
-                              <span className="text-sm sm:text-base font-medium">
-                                {visitor.firstName?.charAt(0)}{visitor.lastName?.charAt(0)}
-                              </span>
-                            </div>
-                            <div className="overflow-hidden">
-                              <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{visitor.firstName} {visitor.lastName}</p>
-                              <p className="text-xs sm:text-sm text-gray-500 truncate">{visitor.email}</p>
-                            </div>
-                          </div>
-                          <div className="mt-2 sm:mt-3 ml-10 sm:ml-13 grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-1">
-                            <p className="text-xs sm:text-sm text-gray-500 flex items-center">
-                              <Building className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 mr-1.5 sm:mr-2 flex-shrink-0" />
-                              <span className="font-medium mr-1">Company:</span>
-                              <span className="truncate">{visitor.company || 'Not specified'}</span>
-                            </p>
-                            <p className="text-xs sm:text-sm text-gray-500 flex items-center">
-                              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 mr-1.5 sm:mr-2 flex-shrink-0" />
-                              <span className="font-medium mr-1">Last visit:</span> {new Date(visitor.visitDate).toLocaleDateString()}
-                            </p>
-                            {visitor.purpose && (
-                              <p className="text-xs sm:text-sm text-gray-500 flex items-start col-span-2 mt-1">
-                                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 mr-1.5 sm:mr-2 mt-0.5 flex-shrink-0" />
-                                <span className="overflow-hidden"><span className="font-medium mr-1">Purpose:</span> <span className="truncate">{visitor.purpose}</span></span>
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          // onClick={() => selectReturnVisitor(visitor)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center shadow-sm self-start sm:self-center"
-                        >
-                          <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                          Use this information
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : error && error.includes('No previous visits') ? (
-              <div className="mt-4 sm:mt-6 bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-lg flex items-start">
-                <div className="bg-yellow-100 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 flex-shrink-0">
-                  <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm sm:text-base text-yellow-800 mb-0.5 sm:mb-1">No Previous Visits Found</p>
-                  <p className="text-xs sm:text-sm text-yellow-700">
-                    We couldn&apos;t find any previous visits for this email address. Please fill in your information below to register as a new visitor.
-                  </p>
-                </div>
-              </div>
-            ) : success ? (
-              <div className="mt-4 sm:mt-6 bg-green-50 border border-green-200 p-3 sm:p-4 rounded-lg flex items-start">
-                <div className="bg-green-100 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3 flex-shrink-0">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm sm:text-base text-green-800 mb-0.5 sm:mb-1">Information Retrieved</p>
-                  <p className="text-xs sm:text-sm text-green-700">
-                    {success}
-                  </p>
-                </div>
-              </div>
-            ) : null} */}
           </div>
 
           {/* Personal Information */}
@@ -693,7 +552,6 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                         key={index}
                         className={`border p-4 rounded-xl shadow-md bg-white cursor-pointer relative ${openHazards[hazard.title] ? "border-blue-500 ring-2 ring-blue-300" : "border-gray-300"
                           }`}
-                        onClick={() => toggleHazardBox(hazard.title)}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xl font-semibold">{hazard.title}</span>
@@ -703,6 +561,7 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                           className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 text-xs rounded"
                           onClick={(e) => {
                             e.stopPropagation();
+                            toggleHazardBox(hazard.title)
                             setSelectedHazards((prev) => {
                               if (prev[hazard.title]) {
                                 // Deselect
@@ -724,7 +583,7 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                           }}
 
                         >
-                          {selectedHazards[hazard.title] ? "Deselect" : "Select"}
+                          {selectedHazards[hazard.title]?.title && selectedHazards[hazard.title]?.risk && selectedHazards[hazard.title]?.selectedControls?.length > 0 ? "Deselect" : "Select"}
                         </button>
 
                         {openHazards[hazard.title] && (
@@ -809,6 +668,31 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                   <h2 className="text-xl font-semibold">Comments</h2>
                   <Textarea placeholder="Comments" className="min-h-[100px]" name="purpose" value={form.purpose}
                     onChange={handleChange} required />
+
+                  {/* Document Upload */}
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-semibold">Attach Documents</h2>
+                    <p className="text-sm text-gray-500">Accepted file types: PDF, DOC, DOCX</p>
+                    <input
+                     placeholder="enter document"
+                      type="file"
+                      name="documents"
+                      accept=".pdf,.doc,.docx"
+                      multiple
+                      onChange={handleDocumentUpload}
+                      className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                    />
+
+                    {/* Optional Preview / List of Selected Files */}
+                    {form.documents?.length > 0 && (
+                      <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1 mt-2">
+                        {form.documents.map((doc, idx) => (
+                          <li key={idx}>{doc.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
 
                   {/* Terms and condition */}
                   <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 shadow-sm mt-4 sm:mt-6">

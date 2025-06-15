@@ -531,7 +531,7 @@ export default function VisitorsPage() {
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">
-                                {visitor.firstName}{visitor.lastName}
+                                {visitor.firstName} {visitor.lastName}
                               </div>
                               <div className="text-sm text-gray-500">{visitor.email}</div>
                             </div>
@@ -539,7 +539,7 @@ export default function VisitorsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div>
-                            <div className="font-medium text-gray-900">{'—'}</div>
+                            <div className="font-medium text-gray-900">{visitor.hostEmployee || '—'}</div>
                             <div className="text-gray-500">{visitor.department || '—'}</div>
                           </div>
                         </td>
@@ -688,7 +688,7 @@ export default function VisitorsPage() {
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">
-                                {visitor.firstName}{visitor.lastName}
+                                {visitor.firstName} {visitor.lastName}
                               </div>
                               <div className="text-sm text-gray-500">{visitor.email}</div>
                             </div>
@@ -696,7 +696,7 @@ export default function VisitorsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div>
-                            <div className="font-medium text-gray-900">{'—'}</div>
+                            <div className="font-medium text-gray-900">{visitor.hostEmployee || '—'}</div>
                             <div className="text-gray-500">{visitor.department || '—'}</div>
                           </div>
                         </td>
@@ -841,7 +841,7 @@ export default function VisitorsPage() {
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center" aria-hidden="true">
                           <span className="text-blue-600 font-medium">
-                            {visitor.firstName}{visitor.lastName}
+                          {visitor.firstName?.charAt(0)}{visitor.lastName?.charAt(0)}
                           </span>
                         </div>
                         <div className="ml-3">
@@ -864,7 +864,7 @@ export default function VisitorsPage() {
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="font-medium text-gray-500">Host:</span>
-                        <div className="mt-1 text-gray-900">{'—'}</div>
+                        <div className="mt-1 text-gray-900">{visitor.hostEmployee || '—'}</div>
                       </div>
 
                       <div>
@@ -937,7 +937,6 @@ export default function VisitorsPage() {
                               ) : (
                                 <>
                                   <Check className="h-4 w-4 mr-1" aria-hidden="true" />
-                                  <span>Approve</span>
                                 </>
                               )}
                             </button>
@@ -948,7 +947,6 @@ export default function VisitorsPage() {
                               aria-label={`Reject ${visitor.firstName} ${visitor.lastName}`}
                             >
                               <X className="h-4 w-4 mr-1" aria-hidden="true" />
-                              <span>Reject</span>
                             </button>
                           </>
                         )}

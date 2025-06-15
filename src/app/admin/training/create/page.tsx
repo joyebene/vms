@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
-import AppBar from '@/components/AppBar';
 import { trainingAPI, Training } from '@/lib/api';
-import { ArrowLeft, BookOpen, Plus, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CreateTrainingPage() {
@@ -164,7 +163,6 @@ export default function CreateTrainingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppBar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8 flex items-center">
           <Link href="/admin/training" className="mr-4">

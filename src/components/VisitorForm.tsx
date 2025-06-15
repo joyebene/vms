@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import AppBar from './AppBar';
-import { AlertCircle, ArrowUpRight, CheckCircle,  FileText, Mail, Search, User } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, CheckCircle, FileText, Mail, Search, User } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -33,33 +33,28 @@ interface VisitorFormProps {
     handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     setForm: React.Dispatch<React.SetStateAction<FormData>>;
     setFormType: React.Dispatch<React.SetStateAction<'visitor' | 'contractor'>>;
+    error: string;
+    success: string;
 }
 
-const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType }: VisitorFormProps) => {
+const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, error, success }: VisitorFormProps) => {
     const [loading, setLoading] = useState(false);
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
+
         try {
-            await handleSubmit(e); // wait for async parent handler
-            setSuccess(`Your visit has been scheduled successfully! Please check in at the reception desk when you arrive. ${form.hostEmployee} has been notified of your upcoming visit on ${new Date(form.visitStartDate).toLocaleDateString()}.`);
+            await handleSubmit(e);
+
+        } catch (err) {
+
+            console.log(err);
+
         } finally {
             setLoading(false);
-            setError('Your Form Was Not Submitted');
         }
     };
-
-
-
-    // State for form handling
-    //   const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-
-
-
-
 
     return (
         <main className='min-h-screen bg-gradient-to-br from-white via-indigo-100 to-purple-100 pb-4 sm:pb-8 lg:pb-10'>
@@ -130,7 +125,7 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType }:
                                             // })}
                                             className="bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-700 transition-colors"
                                         >
-                                            Register Another Visitor
+                                            Register Another Visit
                                         </button>
                                     </div>
                                 </div>

@@ -97,6 +97,12 @@ export default function Home() {
                   Returning Visitor <User className="ml-2 h-5 w-5" />
                 </Link>
                 <Link
+                  href="/training-registeration"
+                  className="flex items-center justify-center bg-indigo-500 hover:bg-indigo-600 text-white px-4 sm:px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold w-full transition-all shadow-md hover:shadow-lg"
+                >
+                  Reister for Training <User className="ml-2 h-5 w-5" />
+                </Link>
+                <Link
                   href="/check-out"
                   className="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold w-full transition-all shadow-md hover:shadow-lg"
                 >
@@ -122,7 +128,7 @@ export default function Home() {
               )}
             </div>
 
-            {/* Hero Image */}
+            {/* Hero Image */}  
             <div className="relative mt-6 lg:mt-0">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20"></div>
               <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -264,7 +270,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4">
             <div className="text-center md:text-left">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">QuickPass</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">FV VMS</h2>
               <p className="text-sm">Visitor Management System</p>
             </div>
             <div className="text-center md:text-left">
@@ -272,6 +278,7 @@ export default function Home() {
               <ul className="space-y-2">
                 <li><Link href="/check-in" className="hover:text-white transition-colors">Check In</Link></li>
                 <li><Link href="/been-here-before" className="hover:text-white transition-colors">Returning Visitor</Link></li>
+                <li><Link href="/training-registeration" className="hover:text-white transition-colors">Register for training</Link></li>
                 <li><Link href="/check-out" className="hover:text-white transition-colors">Check Out</Link></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Admin Login</Link></li>
               </ul>
@@ -279,9 +286,9 @@ export default function Home() {
             <div className="text-center md:text-left">
               <h3 className="text-white font-semibold mb-3">Support</h3>
               <ul className="space-y-2">
-                <li><Link href="#" className="hover:text-white transition-colors">Help Center</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Contact Us</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
+                <li><Link href="/contact-us" className="hover:text-white transition-colors">Contact Us</Link></li>
+                <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
           </div>

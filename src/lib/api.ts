@@ -95,6 +95,31 @@ export interface Visitor {
   notificationSent?: boolean;
   approvalNotificationSent?: boolean;
 }
+export interface VisitorForm {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  purpose: string;
+  hostEmployee: string;
+  company?: string;
+  siteLocation?: string;
+  department: string;
+  meetingLocation: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  status: 'pending' | 'approved' | 'checked-in' | 'checked-out' | 'cancelled';
+  visitStartDate: string;
+  visitEndDate: string;
+  visitorCategory: 'visitor' | 'contractor';
+  qrCode?: string;
+  trainingCompleted?: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+  notificationSent?: boolean;
+  approvalNotificationSent?: boolean;
+}
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -873,7 +898,7 @@ export const accessControlAPI = {
 export interface Notification {
   _id: string;
   type: 'visitor-arrival' | 'visitor-departure' | 'visitor-registration' | 'visitor-cancelled' |
-        'check-in' | 'check-out' | 'registration' | 'cancelled' | 'welcome' | 'reset-password';
+  'check-in' | 'check-out' | 'registration' | 'cancelled' | 'welcome' | 'reset-password';
   recipient: string;
   status: 'sent' | 'failed' | 'pending';
   timestamp: string;
@@ -1795,7 +1820,7 @@ export const analyticsAPI = {
 export const newVisitorAPI = {
 
   // fetch all visitor
-    getAll: async () => {
+  getAll: async () => {
     const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors`);
 
     if (!res.ok) {
@@ -1805,8 +1830,36 @@ export const newVisitorAPI = {
 
     return await res.json();
   },
-  // fetch all visitor
-    getAllSchedule: async () => {
+
+  // fetch single visitor
+  // fetch a single visitor by ID
+  getSingleVisitorById: async (id) => {
+    console.log('Fetching:', `${NEXT_PUBLIC_API_BASE_URL}/admin/visitor/${id}`);
+
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitor/${id}`);
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to fetch visitor');
+    }
+
+    return await res.json();
+  },
+
+
+  // ✅ fetch all visit history (visitors + contractors)
+  getVisitHistory: async () => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visit-history`);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to fetch visit history');
+    }
+    return await res.json();
+  },
+
+
+  // fetch all schedule
+  getAllSchedule: async () => {
     const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visits`);
 
     if (!res.ok) {
@@ -1839,30 +1892,30 @@ export const newVisitorAPI = {
   },
 
   checkOutVisitor: async (id: string, token: string) => {
-  const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/visitors/${id}/checkout`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/visitors/${id}/checkout`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  if (!res.ok) throw new Error('Failed to check out visitor');
-  return res.json();
-},
+    if (!res.ok) throw new Error('Failed to check out visitor');
+    return res.json();
+  },
 
-exportToExcel: async (token: string, filters: any) => {
-  const queryParams = new URLSearchParams(filters).toString();
-  const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/api/visitors/export?${queryParams}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  exportToExcel: async (token: string, filters: any) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/api/visitors/export?${queryParams}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  if (!res.ok) throw new Error('Failed to export Excel file');
-  return await res.blob();
-},
+    if (!res.ok) throw new Error('Failed to export Excel file');
+    return await res.blob();
+  },
 
-// Edit visitor or contractor form
+  // Edit visitor or contractor form
   editForm: async (
     id: string,
     updates: Record<string, any>,

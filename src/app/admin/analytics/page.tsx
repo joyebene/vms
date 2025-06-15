@@ -83,7 +83,7 @@ export default function AnalyticsDashboard() {
     fetchVisitors();
     console.log(filteredVisitors.length);
     
-  }, [filteredVisitors]);
+  }, []);
 
 
   const { user, token } = useAuth();

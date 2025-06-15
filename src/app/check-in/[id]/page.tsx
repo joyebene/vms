@@ -68,7 +68,7 @@ export default function VisitorCheckIn() {
     <div className="min-h-screen bg-gradient-to-br from-white via-indigo-100 to-purple-100 px-4 py-6">
       {/* Navbar */}
       <nav className="flex flex-col md:flex-row justify-between items-center mb-8 relative z-20">
-        <Link href="/" className="text-2xl md:text-3xl font-bold text-blue-800">QuickPass</Link>
+        <Link href="/" className="text-2xl md:text-3xl font-bold text-blue-800">FV VMS</Link>
       </nav>
 
       <div className="bg-white rounded-3xl shadow-lg p-6 md:p-10 w-full max-w-2xl mx-auto">

@@ -76,7 +76,7 @@ export default function AdminLayout({
       <AppBar />
       <AdminSidebar />
       
-      <div className="lg:pl-64 pt-16">
+      <div className="lg:pl-64 pt-6 lg:pt-10">
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {(title || description) && (
             <div className="mb-8">
