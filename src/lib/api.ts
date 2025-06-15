@@ -1833,7 +1833,7 @@ export const newVisitorAPI = {
 
   // fetch single visitor
   // fetch a single visitor by ID
-  getSingleVisitorById: async (id) => {
+  getSingleVisitorById: async (id: string) => {
     console.log('Fetching:', `${NEXT_PUBLIC_API_BASE_URL}/admin/visitor/${id}`);
 
     const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitor/${id}`);
