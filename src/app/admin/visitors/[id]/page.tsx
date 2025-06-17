@@ -126,7 +126,6 @@ export default function VisitorDetails() {
       {showQrCode && visitor && token && (
         <QRCodeDisplay
           visitorId={visitor._id}
-          token={token}
           onClose={() => setShowQrCode(false)}
         />
       )}

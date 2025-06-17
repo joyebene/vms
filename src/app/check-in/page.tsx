@@ -6,8 +6,7 @@ import VisitorForm from '@/components/VisitorForm';
 
 
 type DocumentItem =
-  | { name: string; file: File }
-  | { name: string; url: string; type?: string; uploadedAt?: string };
+  { name: string; file?: File; url: string; type?: string; uploadedAt?: string };
 
 
 type FormData = {

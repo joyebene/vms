@@ -1815,6 +1815,14 @@ export const analyticsAPI = {
 };
 
 
+export interface DocumentItem {
+  name: string;        // The name of the file
+  url: string;         // The public URL/path to access the uploaded file
+  type: string;        // The MIME type (e.g., "application/pdf")
+  file?: File; 
+  fileType: string        // Optional original file object (useful before uploading)
+}
+
 
 
 export const newVisitorAPI = {
@@ -1830,6 +1838,28 @@ export const newVisitorAPI = {
 
     return await res.json();
   },
+
+  searchByEmail: async (email: string) => {
+  try {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/email-lookup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      console.log('Found:', data);
+      return data.data;
+      // fill form with data.data (visitor or contractor)
+    } else {
+      console.warn('Not found');
+    }
+  } catch (err) {
+    console.error('Error searching:', err);
+  }
+},
+
 
   // fetch single visitor
   // fetch a single visitor by ID
@@ -1905,7 +1935,7 @@ export const newVisitorAPI = {
 
   exportToExcel: async (token: string, filters: any) => {
     const queryParams = new URLSearchParams(filters).toString();
-    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/api/visitors/export?${queryParams}`, {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/visitors/export?${queryParams}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -1939,7 +1969,129 @@ export const newVisitorAPI = {
     return await response.json(); // { message, updated }
   },
 
+  validateQrCode: async (qrData: string) => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/validate-qr`, {
+        method: 'POST',
+        body: JSON.stringify({ qrData }),
+      });
 
+       if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'QR code validation failed');
+      }
+
+      return await response.json();
+      
+    } catch (error) {
+      console.error('Validate QR code error:', error);
+      throw error;
+    }
+  },
+
+  generateQrCode: async (visitorId: string) => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/qr/${visitorId}`, {
+        method: 'GET',
+      });
+
+       if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'QR code validation failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Generate QR code error:', error);
+      throw error;
+    }
+  },
+
+  // /lib/api.ts
+getVisitorByEmail: async (email: string): Promise<string> => {
+  const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/visitors/email/${email}`);
+  if (!res.ok) throw new Error("Visitor not found");
+  return res.json(); // Should return visitor object
+},
+
+
+  // Upload contractor document
+uploadDocument: async (
+  file: File,
+  documentType: DocumentItem['fileType'],
+  description: string,
+): Promise<DocumentItem> => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    // formData.append('contractorId', contractorId); // ✅ FIXED from visitorId
+    formData.append('documentType', documentType);
+    if (description) formData.append('description', description);
+
+    const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/documents/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Upload document error:', error);
+    throw error;
+  }
+},
+
+
+  // Get visitor documents
+  getVisitorDocuments: async (visitorId: string, token: string): Promise<Document[]> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/documents/visitor/${visitorId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get visitor documents error:', error);
+      throw error;
+    }
+  },
+
+  // Get document by ID
+  getDocument: async (documentId: string, token: string): Promise<Document> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/documents/${documentId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get document error:', error);
+      throw error;
+    }
+  },
+
+  // Delete document
+  deleteDocument: async (documentId: string, token: string): Promise<{ message: string }> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/documents/${documentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Delete document error:', error);
+      throw error;
+    }
+  },
 };
+
 
 

@@ -8,6 +8,8 @@ import AppBar from './AppBar';
 import { AlertCircle, ArrowUpRight, CheckCircle, FileText, Mail, Search, User } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { newVisitorAPI } from '@/lib/api';
+import toast from "react-hot-toast";
 
 type FormData = {
     firstName: string;
@@ -39,6 +41,43 @@ interface VisitorFormProps {
 
 const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, error, success }: VisitorFormProps) => {
     const [loading, setLoading] = useState(false);
+    const [searchEmail, setSearchEmail] = useState("");
+    const [isSearching, setIsSearching] = useState(false);
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchEmail(e.target.value);
+    };
+
+    const searchVisitor = async (e?: React.KeyboardEvent | React.MouseEvent) => {
+        if (e) e.preventDefault();
+        if (!searchEmail) return;
+
+        try {
+            setIsSearching(true);
+            const data = await newVisitorAPI.searchByEmail(searchEmail.trim().toLowerCase());
+
+            if (!data) {
+                toast.error("No visitor found with that email.");
+                return;
+            }
+
+            console.log(data);
+            
+
+            // ✅ Set the returned data into your form
+            setForm((prevForm) => ({
+                ...prevForm,
+                ...data,
+            }));
+
+            toast.success("Visitor data loaded.");
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to fetch visitor info.");
+        } finally {
+            setIsSearching(false);
+        }
+    };
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -96,33 +135,23 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                                         <Link href="/" className="bg-white border border-green-300 text-green-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-50 transition-colors">
                                             Return to Home
                                         </Link>
-                                        {/* {response && response._id && (
-                                            <Link
-                                                href={`/badge/${response._id}`}
-                                                className="bg-indigo-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center"
-                                            >
-                                                <CreditCard className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                                View Digital Badge
-                                            </Link>
-                                        )} */}
                                         <button
                                             type="button"
-                                            // onClick={() => setFormData({
-                                            //     firstName: '',
-                                            //     lastName: '',
-                                            //     phoneNumber: '',
-                                            //     email: '',
-                                            //     hostEmployeeId: '',
-                                            //     company: '',
-                                            //     siteLocation: '',
-                                            //     purpose: '',
-                                            //     department: '',
-                                            //     meetingLocation: '',
-                                            //     visitStartDate: new Date().toISOString().slice(0, 16),
-                                            //     visitEndDate: new Date().toISOString().slice(0, 16),
-                                            //     category: 'VISITOR',
-                                            //     agreed: false,
-                                            // })}
+                                            onClick={() => setForm({
+                                                firstName: '',
+                                                lastName: '',
+                                                phone: '',
+                                                email: '',
+                                                hostEmployee: '',
+                                                siteLocation: '',
+                                                purpose: '',
+                                                department: '',
+                                                meetingLocation: '',
+                                                visitStartDate: new Date().toISOString().slice(0, 16),
+                                                visitEndDate: new Date().toISOString().slice(0, 16),
+                                                visitorCategory: 'visitor',
+                                                agreed: "",
+                                            })}
                                             className="bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-700 transition-colors"
                                         >
                                             Register Another Visit
@@ -166,19 +195,31 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                                         type="email"
                                         placeholder="Enter your email address"
                                         className="w-full pl-9 sm:pl-10 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80"
-                                    // value={searchEmail}
-                                    // onChange={handleSearchChange}
-                                    // onKeyDown={(e) => e.key === 'Enter' && searchVisitor(e)}
+                                        value={searchEmail}
+                                        onChange={handleSearchChange}
+                                        onKeyDown={(e) => e.key === 'Enter' && searchVisitor(e)}
                                     />
                                 </div>
                                 <button
                                     type="button"
-                                    // onClick={searchVisitor}
-                                    // disabled={isSearching || !searchEmail}
+                                    onClick={searchVisitor}
+                                    disabled={isSearching || !searchEmail}
                                     className="bg-blue-700 hover:bg-blue-800 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg disabled:bg-blue-300 transition-colors flex items-center justify-center whitespace-nowrap shadow-sm text-sm"
                                 >
-                                    <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                                    Find My Information
+                                    {isSearching ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Searching...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                                            Find My Information
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>

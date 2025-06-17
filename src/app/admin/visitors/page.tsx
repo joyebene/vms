@@ -401,8 +401,8 @@ export default function VisitorsPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Categories</option>
-                <option value="VISITOR">Visitor</option>
-                <option value="CONTRACTOR">Contractor</option>
+                <option value="visitor">Visitor</option>
+                <option value="contractor">Contractor</option>
               </select>
             </div>
             <div>
@@ -573,13 +573,6 @@ export default function VisitorsPage() {
                               aria-label={`View details for ${visitor.firstName} ${visitor.lastName}`}
                             >
                               <Eye className="h-4 w-4" aria-hidden="true" />
-                            </Link>
-                            <Link
-                              href={`/admin/documents?visitorId=${visitor._id}`}
-                              className="text-green-600 hover:text-green-900"
-                              aria-label={`View documents for ${visitor.firstName} ${visitor.lastName}`}
-                            >
-                              <FileText className="h-4 w-4" aria-hidden="true" />
                             </Link>
 
                             {/* Edit form */}
@@ -841,7 +834,7 @@ export default function VisitorsPage() {
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center" aria-hidden="true">
                           <span className="text-blue-600 font-medium">
-                          {visitor.firstName?.charAt(0)}{visitor.lastName?.charAt(0)}
+                            {visitor.firstName?.charAt(0)}{visitor.lastName?.charAt(0)}
                           </span>
                         </div>
                         <div className="ml-3">
@@ -900,14 +893,17 @@ export default function VisitorsPage() {
                           <Eye className="h-4 w-4 mr-1" aria-hidden="true" />
                           <span>Details</span>
                         </Link>
-                        <Link
-                          href={`/admin/documents?visitorId=${visitor._id}`}
-                          className="text-green-600 hover:text-green-900 flex items-center"
-                          aria-label={`View documents for ${visitor.firstName} ${visitor.lastName}`}
-                        >
-                          <FileText className="h-4 w-4 mr-1" aria-hidden="true" />
-                          <span>Docs</span>
-                        </Link>
+                        {visitor.visitorCategory === "contractor" && (
+                          <Link
+                            href={`/admin/documents?visitorId=${visitor._id}`}
+                            className="text-green-600 hover:text-green-900 flex items-center"
+                            aria-label={`View documents for ${visitor.firstName} ${visitor.lastName}`}
+                          >
+                            <FileText className="h-4 w-4 mr-1" aria-hidden="true" />
+                            <span>Docs</span>
+                          </Link>
+                        )}
+
                         <button type='button'
                           onClick={() => {
                             setEditingVisitor(visitor);
@@ -917,8 +913,8 @@ export default function VisitorsPage() {
                           className="text-yellow-500 hover:text-yellow-600 flex items-center"
                           aria-label={`Edit documents for ${visitor.firstName} ${visitor.lastName}`}
                         >
-                          <FileText className="h-4 w-4 mr-1" aria-hidden="true" />
-                          <span>edit</span>
+                          {<Edit className="h-4 w-4" aria-hidden="true" />} 
+                          <span> edit</span>
                         </button>
                       </div>
 

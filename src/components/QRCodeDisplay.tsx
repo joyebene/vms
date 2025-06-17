@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { accessControlAPI } from '@/lib/api';
+import { newVisitorAPI } from '@/lib/api';
 import {
   X,
   Download,
@@ -13,14 +13,14 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import Image from 'next/image';
 
 interface QRCodeDisplayProps {
   visitorId: string;
-  token: string;
   onClose: () => void;
 }
 
-export default function QRCodeDisplay({ visitorId, token, onClose }: QRCodeDisplayProps) {
+export default function QRCodeDisplay({ visitorId, onClose }: QRCodeDisplayProps) {
   const [qrData, setQrData] = useState<string>('');
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +36,7 @@ export default function QRCodeDisplay({ visitorId, token, onClose }: QRCodeDispl
 
         // Try to get QR code from API
         try {
-          const data = await accessControlAPI.generateQrCode(visitorId, token);
+          const data = await newVisitorAPI.generateQrCode(visitorId);
           console.log('QR code API response:', data);
 
           if (data && typeof data === 'object') {
@@ -99,7 +99,7 @@ export default function QRCodeDisplay({ visitorId, token, onClose }: QRCodeDispl
     };
 
     fetchQrCode();
-  }, [visitorId, token]);
+  }, [visitorId]);
 
   const handleDownload = () => {
     if (!qrData && !qrImage) return;
@@ -244,9 +244,11 @@ export default function QRCodeDisplay({ visitorId, token, onClose }: QRCodeDispl
           <div className="flex flex-col items-center">
             <div className="bg-white p-5 rounded-lg shadow-md mb-5 border border-gray-100">
               <div className="relative">
-                <img
+                <Image 
                   src={qrImage}
                   alt="Visitor QR Code"
+                  width={50}
+                  height={50}
                   className="w-64 h-64 object-contain"
                 />
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent pointer-events-none rounded-lg"></div>

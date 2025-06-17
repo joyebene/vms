@@ -9,14 +9,13 @@ import { AlertCircle, ArrowUpRight, CheckCircle, FileText, Mail, Search, User } 
 import Link from 'next/link';
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useAuth } from '@/lib/AuthContext';
 import Image from 'next/image';
-import { visitorAPI } from "@/lib/api";
+import { newVisitorAPI } from "@/lib/api";
+import toast from "react-hot-toast";
 
 
 type DocumentItem =
-  | { name: string; file: File }
-  | { name: string; url: string; type?: string; uploadedAt?: string };
+  { name: string; file?: File; url: string; type?: string; uploadedAt?: string };
 
 
 type PPEKeys =
@@ -163,8 +162,41 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
   const [loading, setLoading] = useState(false);
 
 
-  const [searchEmail, setSearchEmail] = useState('');
+  const [searchEmail, setSearchEmail] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchEmail(e.target.value);
+  };
+
+  const searchVisitor = async (e?: React.KeyboardEvent | React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!searchEmail) return;
+
+    try {
+      setIsSearching(true);
+      const data = await newVisitorAPI.searchByEmail(searchEmail.trim().toLowerCase());
+
+      if (!data) {
+        toast.error("No visitor found with that email.");
+        return;
+      }
+
+      // ✅ Set the returned data into your form
+      setForm((prevForm) => ({
+        ...prevForm,
+        ...data,
+      }));
+
+      toast.success("Visitor data loaded.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch visitor info.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const toggleControl = (title: string, control: string) => {
     setSelectedHazards((prev) => {
       const prevControls = prev[title]?.selectedControls || [];
@@ -232,7 +264,7 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
       }));
 
       console.log(updatedHazards);
-      
+
 
       const updatedForm = {
         ...form,
@@ -251,74 +283,53 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
   };
 
 
-  const { token } = useAuth();
+
+  // const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = e.target.files;
+  //   if (!files) return;
+
+  //   const uploadedDocs: DocumentItem[] = Array.from(files).map((file) => ({
+  //     name: file.name,
+  //     file,
+  //   }));
+
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     documents: [...(prev.documents || []), ...uploadedDocs],
+  //   }));
+  // };
+
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchEmail(e.target.value);
-  };
-
-  const searchVisitor = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(searchEmail)) {
-      alert('Please enter a valid email address');
-      return;
-    }
-
-    if (!token) {
-      console.log("Token expired!!!")
-      return;
-    }
-
-    setIsSearching(true);
 
 
-    try {
-      // Use the improved API to search for visitors by email
-      const results = await visitorAPI.searchVisitorsByEmail(searchEmail, token);
+    const uploadedDocs: DocumentItem[] = [];
 
-      if (results.length === 0) {
-        // If no results, show a message but don't set an error
-        // This is a normal case, not an error condit
-      } else {
-        // Sort results by visit date (most recent first)
-        results.sort((a, b) => {
-          const dateA = new Date(a.visitStartDate || a.checkInTime || 0);
-          const dateB = new Date(b.visitStartDate || b.checkInTime || 0);
-          return dateB.getTime() - dateA.getTime();
+    for (const file of Array.from(files)) {
+      console.log(file.type);
+
+
+      try {
+        const uploaded = await newVisitorAPI.uploadDocument(file, file.type, '',); // Use your helper
+        uploadedDocs.push({
+          name: uploaded.name,
+          url: uploaded.url,
+          type: uploaded.type,
+          file: undefined, // optional to keep the structure consistent
         });
-
-        // setSuccess(`Found ${results.length} previous visit${results.length > 1 ? 's' : ''} for this email.`);
+      } catch (error) {
+        console.error('Document upload failed:', error);
       }
-
-
-    } catch (err) {
-      console.error('Error searching for visitor:', err);
-    } finally {
-      setIsSearching(false);
     }
+
+    setForm((prev) => ({
+      ...prev,
+      documents: [...(prev.documents || []), ...uploadedDocs],
+    }));
   };
-
-
-const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const files = e.target.files;
-  if (!files) return;
-
-  const uploadedDocs: DocumentItem[] = Array.from(files).map((file) => ({
-    name: file.name,
-    file,
-  }));
-
-  setForm((prev) => ({
-    ...prev,
-    documents: [...(prev.documents || []), ...uploadedDocs],
-  }));
-};
-
-
 
 
 
@@ -363,35 +374,41 @@ const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
                   <Link href="/" className="bg-white border border-green-300 text-green-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-50 transition-colors">
                     Return to Home
                   </Link>
-                  {/* {response && response._id && (
-                    <Link
-                      href={`/badge/${response._id}`}
-                      className="bg-indigo-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center"
-                    >
-                      <CreditCard className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      View Digital Badge
-                    </Link>
-                  )} */}
+
                   <button
                     type="button"
-                    // onClick={() => setForm({
-                    //   firstName: '',
-                    //   lastName: '', 
-                    //   phone: '',
-                    //   email: '',
-                    //   hostEmployee: '',
-                    //   siteLocation: '',
-                    //   purpose: '',
-                    //   department: '',
-                    //   meetingLocation: '',
-                    //   visitStartDate: new Date().toISOString().slice(0, 16),
-                    //   visitEndDate: new Date().toISOString().slice(0, 16),
-                    //   visitorCategory: 'visitor',
-                    //   agreed: false,
-                    // })}
+                    onClick={() => setForm({
+                      firstName: '',
+                      lastName: '',
+                      phone: '',
+                      email: '',
+                      hostEmployee: '',
+                      siteLocation: '',
+                      purpose: '',
+                      department: '',
+                      meetingLocation: '',
+                      visitStartDate: new Date().toISOString().slice(0, 16),
+                      visitEndDate: new Date().toISOString().slice(0, 16),
+                      visitorCategory: 'visitor',
+                      agreed: "",
+                      hazards: [],
+                      ppe: {
+                        "HARD HAT": 'N' ,
+                        "SAFETY SHOES": 'N' ,
+                        "OVERALLS": 'N' ,
+                        "EYE PROTECTION": 'N',
+                        "VEST VEST": 'N' ,
+                        "EAR PROTECTION": 'N' ,
+                        "RESPIRATORY EQUIP": 'N' ,
+                        "GLOVES": 'N' ,
+                        "DUST MASK": 'N' ,
+                        "FALL ARREST": 'N' ,
+                      },
+                      documents: [],
+                    })}
                     className="bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-700 transition-colors"
                   >
-                    Register Another Visitor
+                    Register Another Visit
                   </button>
                 </div>
               </div>
@@ -598,6 +615,7 @@ const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
                                       name={`risk-${index}`}
                                       value={r}
                                       checked={selectedHazards[hazard.title]?.risk === r}
+                                      required
                                       onChange={(e) => {
                                         e.stopPropagation();
                                         setRisk(hazard.title, r);
@@ -616,6 +634,7 @@ const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
                                     <input
                                       type="checkbox"
                                       className="accent-blue-500"
+                                      required
                                       checked={selectedHazards[hazard.title]?.selectedControls.includes(ctrl) || false}
                                       onChange={() => toggleControl(hazard.title, ctrl)}
                                     />
@@ -674,7 +693,7 @@ const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
                     <h2 className="text-xl font-semibold">Attach Documents</h2>
                     <p className="text-sm text-gray-500">Accepted file types: PDF, DOC, DOCX</p>
                     <input
-                     placeholder="enter document"
+                      placeholder="enter document"
                       type="file"
                       name="documents"
                       accept=".pdf,.doc,.docx"
