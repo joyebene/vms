@@ -143,7 +143,7 @@ export default function QRCodeDisplay({ visitorId, onClose }: QRCodeDisplayProps
         ctx.fillText(`Visitor ID: ${visitorId}`, size/2, size - 30);
 
         // Create an image from the SVG
-        const img = new Image();
+        const img = document.createElement('img');
         const svgData = new XMLSerializer().serializeToString(svgElement);
         const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(svgBlob);
