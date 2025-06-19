@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
     // your project has type errors.
     ignoreBuildErrors: false,
   },
+   images: {
+    domains: ['res.cloudinary.com'],
+  },
 };
 
 export default nextConfig;

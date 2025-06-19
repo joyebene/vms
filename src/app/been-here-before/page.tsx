@@ -1,21 +1,19 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { visitorAPI } from '@/lib/api';
-import { useAuth } from '@/lib/AuthContext';
-import { User, Mail, Search, ArrowRight, Check, AlertCircle, ArrowLeft } from 'lucide-react';
+// import Image from 'next/image';
+import { newVisitorAPI, VisitorForm } from '@/lib/api';
+import {  Mail, Search, ArrowRight, Check, AlertCircle, ArrowLeft } from 'lucide-react';
 import AppBar from '@/components/AppBar';
 
 export default function BeenHereBeforePage() {
   const [searchEmail, setSearchEmail] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<VisitorForm[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { token } = useAuth();
   const router = useRouter();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,13 +41,14 @@ export default function BeenHereBeforePage() {
 
     try {
       // Use the API to search for visitors by email
-      const results = await visitorAPI.searchVisitorsByEmail(searchEmail, token || '');
+      const results = await newVisitorAPI.searchByEmail(searchEmail);
 
       if (results.length === 0) {
         setError('No previous visits found for this email address.');
       }
-
-      setSearchResults(results);
+      // console.log(results)
+      setSearchResults([results]);
+      
     } catch (err) {
       console.error('Error searching for visitor:', err);
       setError('Failed to search for visitor. Please try again.');
@@ -58,7 +57,7 @@ export default function BeenHereBeforePage() {
     }
   };
 
-  const selectReturnVisitor = (visitor: any) => {
+  const selectReturnVisitor = (visitor: VisitorForm) => {
     // Store visitor data in session storage to be used in the check-in page
     sessionStorage.setItem('returnVisitor', JSON.stringify(visitor));
 
@@ -87,7 +86,7 @@ export default function BeenHereBeforePage() {
 
               <h1 className="text-3xl font-bold text-blue-900 mb-2">Returning Visitor</h1>
               <p className="text-gray-600 mb-8">
-                If you've visited us before, we can quickly retrieve your information to make check-in faster.
+                If you&apos;ve visited us before, we can quickly retrieve your information to make check-in faster.
               </p>
 
               {error && (
@@ -189,10 +188,7 @@ export default function BeenHereBeforePage() {
                               </div>
                               <div className="mt-2 ml-13">
                                 <p className="text-sm text-gray-500">
-                                  <span className="font-medium">Company:</span> {visitor.company || 'Not specified'}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  <span className="font-medium">Last visit:</span> {new Date(visitor.visitStartDate || visitor.visitDate).toLocaleDateString()}
+                                  <span className="font-medium">Last visit:</span> {new Date(visitor.visitStartDate || visitor.visitEndDate).toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
@@ -222,10 +218,10 @@ export default function BeenHereBeforePage() {
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 max-w-md">
                   <h2 className="text-2xl font-bold mb-4">Welcome Back!</h2>
                   <p className="mb-4">
-                    We're glad to see you again. Using your email, we can quickly retrieve your information to make your check-in process faster and easier.
+                    We&apos;re glad to see you again. Using your email, we can quickly retrieve your information to make your check-in process faster and easier.
                   </p>
                   <p>
-                    If you have any questions or need assistance, please don't hesitate to ask our reception staff.
+                    If you have any questions or need assistance, please don&apos;t hesitate to ask our reception staff.
                   </p>
                 </div>
               </div>

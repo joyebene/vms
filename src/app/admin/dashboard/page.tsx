@@ -37,11 +37,7 @@ export default function AdminDashboard() {
       setFilteredVisitors(visitors);
       const contractors = visitorData.filter(v => v.visitorCategory === "contractor");
 
-      const checkedout = visitorData.filter(v => {
-        const visitEnd = new Date(v.visitEndDate);
-        const now = new Date();
-        return visitEnd < now;
-      });
+      const checkedout = visitorData.filter(v => v.status === "checked-out");
       setCheckedOut(checkedout);
 
 

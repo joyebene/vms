@@ -303,7 +303,7 @@ export default function CreateTrainingPage() {
                       onClick={() => removeQuestion(questionIndex)}
                       className="text-red-600 hover:text-red-800"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      { <Trash2 className="h-4 w-4" /> }
                     </button>
                   )}
                 </div>
@@ -322,6 +322,7 @@ export default function CreateTrainingPage() {
                   {question.options.map((option, optionIndex) => (
                     <div key={optionIndex} className="flex items-center">
                       <input
+                        placeholder='tick answeer'
                         type="radio"
                         id={`q${questionIndex}-option${optionIndex}`}
                         name={`q${questionIndex}-correct`}

@@ -41,6 +41,7 @@ type FormData = {
     "FALL ARREST": 'N' | 'Y';
   };
    documents: DocumentItem[];
+   pics?: string;
 };
 
 const defaultVisitorForm = (formType: string) => ({
@@ -75,6 +76,7 @@ const defaultContractorForm = (formType: string): FormData => ({
     "FALL ARREST": 'N',
   },
   documents: [],
+  pics: "",
 });
 
 export default function FormPage() {

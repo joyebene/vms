@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import AppBar from './AppBar';
-import { AlertCircle, ArrowUpRight, CheckCircle, FileText, Mail, Search, User } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, CheckCircle, FileText, ImageDownIcon, Mail, Search, User } from 'lucide-react';
 import Link from 'next/link';
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import Image from 'next/image';
 import { newVisitorAPI } from "@/lib/api";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { convertFileToBase64, uploadBase64File } from "../utils";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 
 type DocumentItem =
@@ -63,6 +66,7 @@ type FormData = {
     "FALL ARREST": 'N' | 'Y';
   };
   documents: DocumentItem[];
+  pics?: string;
 };
 
 
@@ -164,6 +168,8 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
 
   const [searchEmail, setSearchEmail] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const router = useRouter();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchEmail(e.target.value);
@@ -274,6 +280,8 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
       // ✅ Don't rely on setForm here — just pass updatedForm directly
       await handleSubmit(e, updatedForm);
 
+      router.push("/training-doc")
+
     } catch (err) {
       console.error("Submission error:", err);
 
@@ -284,52 +292,99 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
 
 
 
-  // const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const files = e.target.files;
-  //   if (!files) return;
+const MAX_FILE_SIZE_MB = 5;
 
-  //   const uploadedDocs: DocumentItem[] = Array.from(files).map((file) => ({
-  //     name: file.name,
-  //     file,
-  //   }));
+const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
 
-  //   setForm((prev) => ({
-  //     ...prev,
-  //     documents: [...(prev.documents || []), ...uploadedDocs],
-  //   }));
-  // };
+  const uploadedDocs: DocumentItem[] = [];
 
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-
-
-
-    const uploadedDocs: DocumentItem[] = [];
-
-    for (const file of Array.from(files)) {
-      console.log(file.type);
-
-
-      try {
-        const uploaded = await newVisitorAPI.uploadDocument(file, file.type, '',); // Use your helper
-        uploadedDocs.push({
-          name: uploaded.name,
-          url: uploaded.url,
-          type: uploaded.type,
-          file: undefined, // optional to keep the structure consistent
-        });
-      } catch (error) {
-        console.error('Document upload failed:', error);
-      }
+  for (const file of Array.from(files)) {
+    const fileSizeInMB = file.size / (1024 * 1024);
+    if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+      alert(`File "${file.name}" exceeds 5MB limit and will be skipped.`);
+      continue;
     }
 
-    setForm((prev) => ({
-      ...prev,
-      documents: [...(prev.documents || []), ...uploadedDocs],
-    }));
+    try {
+      const base64 = await convertFileToBase64(file);
+      const fullBase64 = `data:${file.type};base64,${base64}`;
+      const url = await uploadBase64File(fullBase64); // Call your Cloudinary upload function
+
+      if (url) {
+        uploadedDocs.push({
+          name: file.name,
+          url,
+          type: file.type,
+          file: undefined,
+        });
+      }
+    } catch (error) {
+      console.error(`Document upload failed for "${file.name}":`, error);
+    }
+  }
+
+  // Update form state
+  setForm((prev) => ({
+    ...prev,
+    documents: [...(prev.documents || []), ...uploadedDocs],
+  }));
+};
+
+
+
+  type UploadEvent =
+    | React.ChangeEvent<HTMLInputElement>
+    | React.DragEvent<HTMLDivElement>;
+
+
+  const handleFileUpload = async (
+    e: UploadEvent
+  ) => {
+    e.preventDefault();
+    const field = "profile pics"
+    let file: File | null = null;
+
+    if ("dataTransfer" in e) {
+      // Handle drag-and-drop
+      file = e.dataTransfer.files?.[0] || null;
+    } else {
+      // Handle traditional input upload
+      file = e.target.files?.[0] || null;
+    }
+
+    if (file) {
+      const fileSizeInMB = file?.size / (1024 * 1024);
+      try {
+        const base64 = await convertFileToBase64(file);
+        if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+          alert("File size exceeds 5MB limit. Please upload a smaller image.");
+          return;
+        }
+
+        else {
+          if (base64) {
+            setUploadLoading(true);
+            const url = await uploadBase64File(base64);
+            setUploadLoading(false);
+            if (url) {
+              setForm((prev) => ({
+                ...prev,
+                pics: url,
+              }));
+              console.log("file upload");
+              console.log(field);
+            }
+          }
+        }
+
+      } catch (error) {
+        console.error("Upload failed:", error);
+      }
+    }
   };
+
 
 
 
@@ -393,16 +448,16 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
                       agreed: "",
                       hazards: [],
                       ppe: {
-                        "HARD HAT": 'N' ,
-                        "SAFETY SHOES": 'N' ,
-                        "OVERALLS": 'N' ,
+                        "HARD HAT": 'N',
+                        "SAFETY SHOES": 'N',
+                        "OVERALLS": 'N',
                         "EYE PROTECTION": 'N',
-                        "VEST VEST": 'N' ,
-                        "EAR PROTECTION": 'N' ,
-                        "RESPIRATORY EQUIP": 'N' ,
-                        "GLOVES": 'N' ,
-                        "DUST MASK": 'N' ,
-                        "FALL ARREST": 'N' ,
+                        "VEST VEST": 'N',
+                        "EAR PROTECTION": 'N',
+                        "RESPIRATORY EQUIP": 'N',
+                        "GLOVES": 'N',
+                        "DUST MASK": 'N',
+                        "FALL ARREST": 'N',
                       },
                       documents: [],
                     })}
@@ -511,6 +566,39 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
                         <SelectItem value="dropbox">Dropbox</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className={`w-[80%] md:w-2/3 lg:w-2/4 h-fit  border-2 border-gray-300 p-2 bg-white rounded-3xl my-4 mx-auto ${form.pics ? "p-1" : "p-10"} `} onDrop={(e) => handleFileUpload(e)}
+                    onDragOver={(e) => e.preventDefault()}>
+                    <label htmlFor="pics">
+                      {form.pics ? (
+                        <Image
+                          src={form.pics}
+                          alt="pics img"
+                          width={100}
+                          height={100}
+                          className="w-full h-[200px] object-cover object-center rounded-3xl"
+                        />
+                      ) : (
+                        <>
+                          {uploadLoading ? (
+                            <div className="flex justify-center items-center h-full w-full">
+                              <AiOutlineLoading3Quarters className="animate-spin text-primary text-5xl" />
+                            </div>
+                          ) : (
+                            <div className=" flex items-center justify center gap-2 md:gap-4">
+                              <ImageDownIcon color="gray" /> <p className="text-[12px] md:text-sm text-gray-600">Click to upload image</p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <input
+                        id="pics"
+                        type="file"
+                        name="pics"
+                        className="hidden"
+                        onChange={(e) => handleFileUpload(e)}
+                      />
+                    </label>
                   </div>
                 </CardContent>
               </Card>

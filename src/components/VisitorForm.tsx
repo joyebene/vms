@@ -58,6 +58,7 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
 
             if (!data) {
                 toast.error("No visitor found with that email.");
+                alert("No visitor found with that email.");
                 return;
             }
 
@@ -71,9 +72,11 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
             }));
 
             toast.success("Visitor data loaded.");
+            alert("Visitor data loaded");
         } catch (err) {
             console.error(err);
             toast.error("Failed to fetch visitor info.");
+            alert("Failed to fetch visitor info.")
         } finally {
             setIsSearching(false);
         }

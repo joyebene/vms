@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+// import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { visitorAPI, Visitor } from '@/lib/api';
+import { newVisitorAPI, VisitorForm } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import {
   User,
@@ -21,7 +21,7 @@ import QRCodeScanner from '@/components/QRCodeScanner';
 
 export default function CheckOut() {
   const [searchEmail, setSearchEmail] = useState('');
-  const [searchResults, setSearchResults] = useState<Visitor[]>([]);
+  const [searchResults, setSearchResults] = useState<VisitorForm[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export default function CheckOut() {
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
 
   const { token } = useAuth();
-  const router = useRouter();
+  // const router = useRouter();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchEmail(e.target.value);
@@ -46,18 +46,19 @@ export default function CheckOut() {
     setIsSearching(true);
     setError(null);
     setSuccess(null);
-    setSearchResults([]);
+    // setSearchResults([]);
 
     try {
-      const visitors = await visitorAPI.searchVisitorsByEmail(searchEmail, token || '');
-
+      const visitors = await newVisitorAPI.searchByEmail(searchEmail);
+      
       // Filter for only checked-in visitors
-      const checkedInVisitors = visitors.filter(visitor => visitor.status === 'checked-in');
+      const checkedInVisitors = visitors;
 
-      if (checkedInVisitors.length === 0) {
+      if (!checkedInVisitors) {
         setError('No checked-in visitors found with this email address');
+     
       } else {
-        setSearchResults(checkedInVisitors);
+        setSearchResults([checkedInVisitors]);
       }
     } catch (err) {
       console.error('Error searching for visitor:', err);
@@ -73,7 +74,7 @@ export default function CheckOut() {
     setSuccess(null);
 
     try {
-      await visitorAPI.checkOutVisitor(visitorId, token || '');
+      await newVisitorAPI.checkOutVisitor(visitorId, token || '');
 
       // Update the search results to reflect the change
       setSearchResults(prev =>
@@ -233,8 +234,8 @@ export default function CheckOut() {
                             <p className="text-sm text-gray-500 flex items-center">
                               <Clock className="h-4 w-4 text-gray-400 mr-2" />
                               <span className="font-medium mr-1">Check-in time:</span>
-                              {visitor.checkInTime
-                                ? new Date(visitor.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                              {visitor.createdAt
+                                ? new Date(visitor.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                                 : 'Not recorded'}
                             </p>
                             <p className="text-sm text-gray-500 flex items-center">
@@ -282,7 +283,7 @@ export default function CheckOut() {
                 <ol className="list-decimal pl-5 space-y-2">
                   <li>Enter the email address you used during check-in</li>
                   <li>Select your visit from the list</li>
-                  <li>Click the "Check Out" button</li>
+                  <li>Click the &quot;Check Out&quot; button</li>
                   <li>Return your visitor badge to reception</li>
                 </ol>
                 <p className="text-sm bg-blue-50 p-3 rounded-lg mt-4">

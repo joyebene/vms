@@ -97,12 +97,6 @@ export default function Home() {
                   Returning Visitor <User className="ml-2 h-5 w-5" />
                 </Link>
                 <Link
-                  href="/training-registeration"
-                  className="flex items-center justify-center bg-indigo-500 hover:bg-indigo-600 text-white px-4 sm:px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold w-full transition-all shadow-md hover:shadow-lg"
-                >
-                  Reister for Training <User className="ml-2 h-5 w-5" />
-                </Link>
-                <Link
                   href="/check-out"
                   className="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold w-full transition-all shadow-md hover:shadow-lg"
                 >

@@ -108,7 +108,7 @@ export interface VisitorForm {
   department: string;
   meetingLocation: string;
   checkInTime?: string;
-  checkOutTime?: string;
+  checkOutVisitor?: string;
   status: 'pending' | 'approved' | 'checked-in' | 'checked-out' | 'cancelled';
   visitStartDate: string;
   visitEndDate: string;
@@ -119,6 +119,7 @@ export interface VisitorForm {
   approvedAt?: string;
   notificationSent?: boolean;
   approvalNotificationSent?: boolean;
+  createdAt? : Date;
 }
 
 export interface ApiResponse<T> {
@@ -658,10 +659,12 @@ export interface Training {
   description: string;
   type: 'safety' | 'security' | 'procedure' | 'other';
   content: string;
+  videos: [];
+  books: [];
   questions: {
     question: string;
     options: string[];
-    correctAnswer: number;
+    answer: number;
   }[];
   requiredScore: number;
   isActive: boolean;
@@ -701,161 +704,6 @@ export interface Certificate {
   issueDate: string;
 }
 
-export const trainingAPI = {
-  getAllTrainings: async (token: string): Promise<Training[]> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Get trainings error:', error);
-      throw error;
-    }
-  },
-
-  createTraining: async (trainingData: Partial<Training>, token: string): Promise<Training> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(trainingData),
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Create training error:', error);
-      throw error;
-    }
-  },
-
-  getTrainingById: async (trainingId: string, token: string): Promise<Training> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training/${trainingId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Get training by ID error:', error);
-      throw error;
-    }
-  },
-
-  updateTraining: async (trainingId: string, trainingData: Partial<Training>, token: string): Promise<Training> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training/${trainingId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(trainingData),
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Update training error:', error);
-      throw error;
-    }
-  },
-
-  deleteTraining: async (trainingId: string, token: string): Promise<{ message: string }> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training/${trainingId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Delete training error:', error);
-      throw error;
-    }
-  },
-
-  submitTraining: async (visitorId: string, trainingId: string, answers: number[], token: string): Promise<TrainingSubmissionResponse> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ visitorId, trainingId, answers }),
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Submit training error:', error);
-      throw error;
-    }
-  },
-
-  getTrainingStatus: async (visitorId: string, token: string): Promise<TrainingCompletion[]> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training/enrollments/visitor/${visitorId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Get training status error:', error);
-      throw error;
-    }
-  },
-
-  // New endpoint: Enroll visitor in training
-  enrollVisitor: async (visitorId: string, trainingId: string, token: string): Promise<TrainingEnrollment> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training/enrollments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ visitorId, trainingId }),
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Enroll visitor in training error:', error);
-      throw error;
-    }
-  },
-
-  // New endpoint: Generate certificate
-  generateCertificate: async (enrollmentId: string, token: string): Promise<Certificate> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/training/certificates/${enrollmentId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      return handleResponse(response);
-    } catch (error) {
-      console.error('Generate certificate error:', error);
-      throw error;
-    }
-  },
-};
 
 // Access Control API
 export const accessControlAPI = {
@@ -1848,7 +1696,7 @@ export const newVisitorAPI = {
     });
 
     const data = await res.json();
-    if (res.ok) {
+    if (res.ok) { 
       console.log('Found:', data);
       return data.data;
       // fill form with data.data (visitor or contractor)
@@ -1922,7 +1770,7 @@ export const newVisitorAPI = {
   },
 
   checkOutVisitor: async (id: string, token: string) => {
-    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/visitors/${id}/checkout`, {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors/${id}/checkout`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -2015,31 +1863,6 @@ getVisitorByEmail: async (email: string): Promise<string> => {
 },
 
 
-  // Upload contractor document
-uploadDocument: async (
-  file: File,
-  documentType: DocumentItem['fileType'],
-  description: string,
-): Promise<DocumentItem> => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    // formData.append('contractorId', contractorId); // ✅ FIXED from visitorId
-    formData.append('documentType', documentType);
-    if (description) formData.append('description', description);
-
-    const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/documents/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Upload document error:', error);
-    throw error;
-  }
-},
-
 
   // Get visitor documents
   getVisitorDocuments: async (visitorId: string, token: string): Promise<Document[]> => {
@@ -2092,6 +1915,165 @@ uploadDocument: async (
     }
   },
 };
+
+
+
+export const trainingAPI = {
+  getAllTrainings: async (token: string | null): Promise<Training[]> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/trainings`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get trainings error:', error);
+      throw error;
+    }
+  },
+
+  createTraining: async (trainingData: Partial<Training>, token: string): Promise<Training> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/training`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(trainingData),
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Create training error:', error);
+      throw error;
+    }
+  },
+
+  getTrainingById: async (trainingId: string, token: string): Promise<Training> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/${trainingId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get training by ID error:', error);
+      throw error;
+    }
+  },
+
+  updateTraining: async (trainingId: string, trainingData: Partial<Training>, token: string): Promise<Training> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/${trainingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(trainingData),
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Update training error:', error);
+      throw error;
+    }
+  },
+
+  deleteTraining: async (trainingId: string, token: string): Promise<{ message: string }> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/${trainingId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Delete training error:', error);
+      throw error;
+    }
+  },
+
+  submitTraining: async (visitorId: string, trainingId: string, answers: number[], token: string): Promise<TrainingSubmissionResponse> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ visitorId, trainingId, answers }),
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Submit training error:', error);
+      throw error;
+    }
+  },
+
+  getTrainingStatus: async (visitorId: string, token: string): Promise<TrainingCompletion[]> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/enrollments/visitor/${visitorId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get training status error:', error);
+      throw error;
+    }
+  },
+
+  // New endpoint: Enroll visitor in training
+  enrollVisitor: async (visitorId: string, trainingId: string, token: string): Promise<TrainingEnrollment> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/enrollments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ visitorId, trainingId }),
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Enroll visitor in training error:', error);
+      throw error;
+    }
+  },
+
+  // New endpoint: Generate certificate
+  generateCertificate: async (enrollmentId: string, token: string): Promise<Certificate> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/certificates/${enrollmentId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Generate certificate error:', error);
+      throw error;
+    }
+  },
+};
+
 
 
 

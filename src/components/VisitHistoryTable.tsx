@@ -10,7 +10,7 @@ interface VisitForm {
   siteLocation: string
   status: string
   checkIn: string
-  visitEndDate: string
+  checkOutTime: string
   createdAt: string
 }
 
@@ -21,7 +21,7 @@ export default function VisitorsPage() {
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const data = await newVisitorAPI.getVisitHistory()
+        const data = await newVisitorAPI.getAll()
         setHistory(data)
       } catch (err) {
         console.error('Failed to fetch visit history:', err)
@@ -60,7 +60,7 @@ export default function VisitorsPage() {
                   <td className="px-4 py-2">{entry.siteLocation}</td>
                   <td className="px-4 py-2">{new Date(entry.createdAt).toLocaleString()}</td>
                   <td className="px-4 py-2">
-                    {entry.visitEndDate ? new Date(entry.visitEndDate).toLocaleString() : '—'}
+                    {entry.checkOutTime ? new Date(entry.checkOutTime).toLocaleString() : '—'}
                   </td>
                   <td className="px-4 py-2 capitalize">{entry.status}</td>
                 </tr>
