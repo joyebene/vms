@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { trainingAPI, Training, TrainingEnrollment as TrainingEnrollmentType } from '@/lib/api';
-import { BookOpen, CheckCircle, AlertCircle, Award, ArrowRight } from 'lucide-react';
+import { BookOpen, CheckCircle, AlertCircle, Award } from 'lucide-react';
 
 interface TrainingEnrollmentProps {
   visitorId: string;
@@ -151,7 +151,7 @@ export default function TrainingEnrollment({ visitorId, onEnrollmentSuccess }: T
             
             <div className="flex items-center text-sm text-gray-500 mb-2">
               <span className="font-medium mr-2">Questions:</span>
-              <span>{selectedTraining.questions.length}</span>
+              <span>{selectedTraining?.questions?.length}</span>
             </div>
             
             <div className="flex items-center text-sm text-gray-500">
