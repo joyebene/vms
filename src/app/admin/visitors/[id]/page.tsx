@@ -393,13 +393,13 @@ function VisitorInfo({ visitor }: { visitor: VisitorForm }) {
           {visitor.checkInTime && (
             <div>
               <p className="text-sm text-gray-500">Check-in Time</p>
-              <p className="font-medium">{new Date(visitor.checkInTime).toLocaleString()}</p>
+              <p className="font-medium">{new Date(visitor.createdAt).toLocaleString()}</p>
             </div>
           )}
-          {visitor.checkOutTime && (
+          {visitor.checkOutVisitor && (
             <div>
               <p className="text-sm text-gray-500">Check-out Time</p>
-              <p className="font-medium">{new Date(visitor.checkOutTime).toLocaleString()}</p>
+              <p className="font-medium">{new Date(visitor.checkOutVisitor).toLocaleString()}</p>
             </div>
           )}
         </div>
