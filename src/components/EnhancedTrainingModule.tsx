@@ -122,9 +122,11 @@ export default function EnhancedTrainingModule({
 
   // Navigate to next question
   const goToNextQuestion = () => {
-    if (currentTraining && currentQuestionIndex < currentTraining?.questions?.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setShowHint(false);
+     const totalQuestions = currentTraining?.questions?.length || 0;
+
+  if (currentTraining && currentQuestionIndex < totalQuestions - 1) {
+    setCurrentQuestionIndex(currentQuestionIndex + 1);
+    setShowHint(false);
     } else {
       // If this is the last question, show results
       handleSubmitQuiz();
@@ -163,11 +165,14 @@ export default function EnhancedTrainingModule({
         console.error('Error submitting training to API:', apiError);
 
         // Calculate score locally as fallback
+        const questionsLength = currentTraining?.questions?.length || 1; // fallback to prevent divide-by-zero
+
         const correctAnswers = selectedAnswers.filter(
-          (answer, index) => answer === currentTraining.questions[index]?.answer
+          (answer, index) => answer === currentTraining?.questions?.[index]?.answer
         ).length;
 
-        const calculatedScore = Math.round((correctAnswers / currentTraining.questions?.length) * 100);
+        const calculatedScore = Math.round((correctAnswers / questionsLength) * 100);
+
         const hasPassed = calculatedScore >= (currentTraining.requiredScore || 70);
 
         setScore(calculatedScore);
@@ -410,14 +415,14 @@ export default function EnhancedTrainingModule({
                   <div
                     key={index}
                     className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${selectedAnswers[currentQuestionIndex] === index
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:bg-gray-50'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:bg-gray-50'
                       }`}
                     onClick={() => handleAnswerSelection(currentQuestionIndex, index)}
                   >
                     <div className={`h-5 w-5 rounded-full border flex items-center justify-center mr-3 ${selectedAnswers[currentQuestionIndex] === index
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300'
+                      ? 'border-blue-500 bg-blue-500'
+                      : 'border-gray-300'
                       }`}>
                       {selectedAnswers[currentQuestionIndex] === index && (
                         <div className="h-2 w-2 rounded-full bg-white"></div>
@@ -467,8 +472,8 @@ export default function EnhancedTrainingModule({
                     onClick={goToPreviousQuestion}
                     disabled={currentQuestionIndex === 0}
                     className={`inline-flex items-center px-4 py-2 border rounded-md text-sm font-medium ${currentQuestionIndex === 0
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                      ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
                       }`}
                   >
                     <ChevronLeft className="mr-2 h-5 w-5" />
@@ -478,8 +483,8 @@ export default function EnhancedTrainingModule({
                     onClick={goToNextQuestion}
                     disabled={selectedAnswers[currentQuestionIndex] === -1}
                     className={`inline-flex items-center px-4 py-2 border rounded-md text-sm font-medium ${selectedAnswers[currentQuestionIndex] === -1
-                        ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'border-transparent text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                      ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'border-transparent text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
                       }`}
                   >
                     {currentTraining?.questions && currentQuestionIndex < currentTraining.questions.length
@@ -542,8 +547,8 @@ export default function EnhancedTrainingModule({
                   onComplete(passed);
                 }}
                 className={`inline-flex items-center px-6 py-3 border text-base font-medium rounded-md shadow-sm ${passed
-                    ? 'border-transparent text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
-                    : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500'
+                  ? 'border-transparent text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+                  : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500'
                   }`}
               >
                 {passed ? 'Complete Training' : 'Close'}
