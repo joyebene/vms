@@ -53,7 +53,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
             setTrainings(trainingsResponse);
             setCurrentTraining(trainingsResponse[0]);
             // Initialize selected answers array with -1 (no selection) for each question
-            setSelectedAnswers(Array(trainingsResponse[0].questions.length).fill(-1));
+            setSelectedAnswers(Array(trainingsResponse[0].questions?.length).fill(-1));
             setTrainingStatus('in_progress');
           } else {
             // No trainings available
@@ -85,7 +85,8 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
   };
 
   const handleNextQuestion = () => {
-    if (currentTraining && currentQuestionIndex < currentTraining.questions.length - 1) {
+    const totalQuestions = currentTraining?.questions?.length || 0;
+    if (currentTraining && currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -124,12 +125,14 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
       } catch (apiError) {
         console.error('Error submitting training to API:', apiError);
 
+          // Calculate score locally as fallback
+        const questionsLength = currentTraining?.questions?.length || 1; // fallback to prevent divide-by-zero
         // Calculate score locally as fallback
         const correctAnswers = selectedAnswers.filter(
-          (answer, index) => answer === currentTraining.questions[index].correctAnswer
+          (answer, index) => answer === currentTraining?.questions?.[index]?.answer
         ).length;
 
-        const calculatedScore = Math.round((correctAnswers / currentTraining.questions.length) * 100);
+        const calculatedScore = Math.round((correctAnswers / questionsLength) * 100);
         const passed = calculatedScore >= (currentTraining.requiredScore || 70);
 
         setScore(calculatedScore);
@@ -145,6 +148,12 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
       setIsSubmitting(false);
     }
   };
+
+    // Progress percentage for quiz
+  const progressPercentage = currentTraining?.questions?.length
+    ? Math.round(((currentQuestionIndex + 1) / currentTraining.questions.length) * 100)
+    : 0;
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -195,7 +204,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
               onClick={() => {
                 // Reset training
                 setCurrentQuestionIndex(0);
-                setSelectedAnswers(Array(currentTraining?.questions.length || 0).fill(-1));
+                setSelectedAnswers(Array(currentTraining?.questions?.length || 0).fill(-1));
                 setTrainingStatus('in_progress');
                 setScore(null);
               }}
@@ -214,7 +223,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-gray-500">
-                  Question {currentQuestionIndex + 1} of {currentTraining.questions.length}
+                  Question {currentQuestionIndex + 1} of {currentTraining.questions?.length}
                 </span>
                 <span className="text-sm font-medium text-gray-500">
                   Required to pass: {currentTraining.requiredScore}%
@@ -223,18 +232,18 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
                   className="bg-blue-900 h-2.5 rounded-full"
-                  style={{ width: `${((currentQuestionIndex + 1) / currentTraining.questions.length) * 100}%` }}
+                  style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
             </div>
 
             <div className="bg-gray-50 p-6 rounded-lg mb-6">
               <h4 className="text-lg font-medium mb-4">
-                {currentTraining.questions[currentQuestionIndex].question}
+                {currentTraining.questions?.[currentQuestionIndex]?.question}
               </h4>
 
               <div className="space-y-3">
-                {currentTraining.questions[currentQuestionIndex].options.map((option, index) => (
+                {currentTraining.questions?.[currentQuestionIndex]?.options.map((option, index) => (
                   <div
                     key={index}
                     className="flex items-center"
@@ -267,7 +276,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
                 Previous
               </button>
 
-              {currentQuestionIndex === currentTraining.questions.length - 1 ? (
+              {currentTraining?.questions && currentQuestionIndex < currentTraining.questions.length - 1  ? (
                 <button
                   onClick={handleSubmitTraining}
                   disabled={isSubmitting || selectedAnswers[currentQuestionIndex] === -1}
