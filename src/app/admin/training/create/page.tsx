@@ -23,7 +23,7 @@ export default function CreateTrainingPage() {
       {
         question: '',
         options: ['', '', '', ''],
-        correctAnswer: 0
+        answer: 0
       }
     ],
     requiredScore: 70,
@@ -73,7 +73,7 @@ export default function CreateTrainingPage() {
       const updatedQuestions = [...(prev.questions || [])];
       updatedQuestions[questionIndex] = {
         ...updatedQuestions[questionIndex],
-        correctAnswer: value
+        answer: value
       };
       return {
         ...prev,
@@ -90,7 +90,7 @@ export default function CreateTrainingPage() {
         {
           question: '',
           options: ['', '', '', ''],
-          correctAnswer: 0
+          answer: 0
         }
       ]
     }));
@@ -326,7 +326,7 @@ export default function CreateTrainingPage() {
                         type="radio"
                         id={`q${questionIndex}-option${optionIndex}`}
                         name={`q${questionIndex}-correct`}
-                        checked={question.correctAnswer === optionIndex}
+                        checked={question.answer === optionIndex}
                         onChange={() => handleCorrectAnswerChange(questionIndex, optionIndex)}
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                       />

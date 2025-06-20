@@ -5,17 +5,16 @@ import { useEffect, useState } from 'react';
 import { trainingAPI, Training } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 
-type QuestionAnswer = { question: string; answer: string };
 type SelectedAnswersMap = Record<number, string>;
 
 export default function TrainingPage() {
   const [trainings, setTrainings] = useState<Training[]>([]);
-  const [questions, setQuestions] = useState<QuestionAnswer[]>([]);
   const [questionInput, setQuestionInput] = useState('');
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, SelectedAnswersMap>>({});
   const [showResults, setShowResults] = useState<Record<number, boolean>>({});
   const [scores, setScores] = useState<Record<number, number>>({});
   const [signedBooks, setSignedBooks] = useState<string[]>([]);
+  const [questions, setQuestions] = useState<{ question: string; answer: string }[]>([]);
 
   const { token } = useAuth();
 
@@ -53,7 +52,7 @@ export default function TrainingPage() {
     let correct = 0;
 
     quizQuestions.forEach((q, i) => {
-      if (selected[i] === q.answer) {
+      if (Number(selected[i]) === q.answer) {
         correct++;
       }
     });
@@ -88,7 +87,7 @@ export default function TrainingPage() {
     e.preventDefault();
     if (!questionInput.trim()) return;
 
-    const newQuestion: QuestionAnswer = {
+    const newQuestion = {
       question: questionInput,
       answer: 'Thank you for your question. Our team will respond shortly.',
     };
@@ -187,10 +186,10 @@ export default function TrainingPage() {
                         ))}
                       </div>
                       {showResults[index] && (
-                        <p className={`mt-2 font-medium ${selectedAnswers[index]?.[i] === q.answer ? 'text-green-600' : 'text-red-600'}`}>
-                          {selectedAnswers[index]?.[i] === q.answer
+                        <p className={`mt-2 font-medium ${Number(selectedAnswers[index]?.[i]) === q.answer ? 'text-green-600' : 'text-red-600'}`}>
+                          {Number(selectedAnswers[index]?.[i]) === q.answer
                             ? '✅ Correct'
-                            : `❌ Correct answer: ${q.answer}`}
+                            : `❌ Correct answer: ${q.options[q.answer]}`}
                         </p>
                       )}
                     </div>

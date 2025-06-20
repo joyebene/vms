@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import TrainingEnrollment from '@/components/TrainingEnrollment';
-import { trainingAPI, Training, visitorAPI, Visitor } from '@/lib/api';
+import { trainingAPI, Training, newVisitorAPI, VisitorForm } from '@/lib/api';
 import { BookOpen, Search, AlertCircle, CheckCircle, XCircle, Edit, Trash2, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TrainingPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVisitorId, setSelectedVisitorId] = useState<string | null>(null);
-  const [visitors, setVisitors] = useState<Visitor[]>([]);
-  const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
+  const [visitors, setVisitors] = useState<VisitorForm[]>([]);
+  const [filteredVisitors, setFilteredVisitors] = useState<VisitorForm[]>([]);
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [isLoadingVisitors, setIsLoadingVisitors] = useState(true);
   const [isLoadingTrainings, setIsLoadingTrainings] = useState(true);
@@ -34,8 +34,8 @@ export default function TrainingPage() {
         (visitor) =>
           visitor.firstName.toLowerCase().includes(query) ||
           visitor.lastName.toLowerCase().includes(query) ||
-          visitor.email.toLowerCase().includes(query) ||
-          (visitor.company && visitor.company.toLowerCase().includes(query))
+          visitor.email.toLowerCase().includes(query) 
+
       );
       setFilteredVisitors(filtered);
     }
@@ -49,9 +49,8 @@ export default function TrainingPage() {
 
     try {
       // For admin users, get all visitors; for others, get only their hosted visitors
-      const visitorData = user?.role === 'admin' || user?.role === 'manager' || user?.role === 'security'
-        ? await visitorAPI.getAllVisitors(token)
-        : await visitorAPI.getVisitorsByHost(token);
+      const visitorData = await newVisitorAPI.getAll()
+        // : await visitorAPI.getVisitorsByHost(token);
       setVisitors(visitorData);
       setFilteredVisitors(visitorData);
 

@@ -339,51 +339,61 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     | React.DragEvent<HTMLDivElement>;
 
 
-  const handleFileUpload = async (
-    e: UploadEvent
-  ) => {
-    e.preventDefault();
-    const field = "profile pics"
-    let file: File | null = null;
+ const handleFileUpload = async (e: UploadEvent) => {
+  e.preventDefault();
+  const field = "profile pics";
+  let file: File | null = null;
 
-    if ("dataTransfer" in e) {
-      // Handle drag-and-drop
-      file = e.dataTransfer.files?.[0] || null;
-    } else {
-      // Handle traditional input upload
-      file = e.target.files?.[0] || null;
-    }
+  if ("dataTransfer" in e) {
+    // Handle drag-and-drop
+    file = e.dataTransfer.files?.[0] || null;
+  } else {
+    // Handle traditional input upload
+    file = e.target.files?.[0] || null;
+  }
 
-    if (file) {
-      const fileSizeInMB = file?.size / (1024 * 1024);
-      try {
-        const base64 = await convertFileToBase64(file);
-        if (fileSizeInMB > MAX_FILE_SIZE_MB) {
-          alert("File size exceeds 5MB limit. Please upload a smaller image.");
-          return;
-        }
+  if (file) {
+    // ✅ Replace slashes in file name to avoid Cloudinary error
+    const sanitizedFile = new File([file], file.name.replace(/\//g, '-'), {
+      type: file.type,
+    });
 
-        else {
-          if (base64) {
-            setUploadLoading(true);
-            const url = await uploadBase64File(base64);
-            setUploadLoading(false);
-            if (url) {
-              setForm((prev) => ({
-                ...prev,
-                pics: url,
-              }));
-              console.log("file upload");
-              console.log(field);
-            }
-          }
-        }
+    const fileSizeInMB = sanitizedFile.size / (1024 * 1024);
 
-      } catch (error) {
-        console.error("Upload failed:", error);
+    try {
+      // ✅ Convert to base64
+      const base64 = await convertFileToBase64(sanitizedFile);
+
+      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+        alert("File size exceeds 5MB limit. Please upload a smaller image.");
+        return;
       }
+
+      if (base64) {
+        setUploadLoading(true);
+
+        // ✅ Upload to Cloudinary
+        const url = await uploadBase64File(base64, setUploadLoading);
+        setUploadLoading(false);
+
+        if (url) {
+          setForm((prev) => ({
+            ...prev,
+            pics: url,
+          }));
+          console.log("Upload successful:", field);
+        } else {
+          console.warn("Upload failed: No URL returned");
+        }
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setUploadLoading(false);
     }
-  };
+  } else {
+    console.warn("No file selected");
+  }
+};
 
 
 

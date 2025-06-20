@@ -16,7 +16,8 @@ import {
   UserPlus,
   FileText,
   BookOpen,
-  LayoutDashboard
+  LayoutDashboard,
+  QrCode
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -201,6 +202,16 @@ const handleLanguageChange = async (lang: string) => {
                                 <div className="flex items-center">
                                   <User className="mr-2 h-4 w-4" />
                                   Visitors
+                                </div>
+                              </Link>
+                              <Link
+                                href="/admin/access-control"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setUserMenuOpen(false)}
+                              >
+                                <div className="flex items-center">
+                                  <QrCode className="mr-2 h-4 w-4" />
+                                  Access Control
                                 </div>
                               </Link>
                               <Link
@@ -397,6 +408,16 @@ const handleLanguageChange = async (lang: string) => {
                         <div className="flex items-center">
                           <User className="mr-2 h-5 w-5" />
                           Visitors
+                        </div>
+                      </Link>
+                      <Link
+                        href="/admin/access-control"
+                        className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <div className="flex items-center">
+                          <QrCode className="mr-2 h-5 w-5" />
+                          Access Control
                         </div>
                       </Link>
                       <Link

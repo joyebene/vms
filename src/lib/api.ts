@@ -653,22 +653,23 @@ export const visitorAPI = {
 
 
 // Training API
-export interface Training {
+export type Training = {
   _id: string;
   title: string;
   description: string;
-  type: 'safety' | 'security' | 'procedure' | 'other';
+  type: string;
   content: string;
-  videos: [];
-  books: [];
-  questions: {
-    question: string;
-    options: string[];
-    answer: number;
-  }[];
   requiredScore: number;
   isActive: boolean;
-}
+  videos?: { name: string; url: string }[];
+  books?: { name: string; url: string }[];
+  questions?: {
+    question: string;
+    options: string[];
+    answer: number; // important!
+  }[];
+};
+
 
 export interface TrainingEnrollment {
   _id: string;
@@ -1921,7 +1922,7 @@ getVisitorByEmail: async (email: string): Promise<string> => {
 export const trainingAPI = {
   getAllTrainings: async (token: string | null): Promise<Training[]> => {
     try {
-      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/trainings`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/trainings`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1937,7 +1938,7 @@ export const trainingAPI = {
 
   createTraining: async (trainingData: Partial<Training>, token: string): Promise<Training> => {
     try {
-      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/training`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/create-training`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

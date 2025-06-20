@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  QrCode
 } from 'lucide-react';
 
 interface NavItem {
@@ -100,6 +101,11 @@ export default function AdminSidebar() {
           icon: <FileText className="h-4 w-4" />,
         },
       ],
+    },
+    {
+      title: "Access Control",
+      href: "/admin/access-control",
+      icon: <QrCode className='h-4 w-4' />
     },
     {
       title: 'Training',

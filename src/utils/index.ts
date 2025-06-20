@@ -5,19 +5,19 @@ export interface CloudinaryResponse {
 }
 
 export const uploadBase64File = async (
-  fullBase64Data: string,
+  base64Data: string,
   setLoading?: (val: boolean) => void
 ): Promise<string | null> => {
   if (setLoading) setLoading(true);
 
   try {
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/dizxfdmk5/upload`, // use auto resource_type
+      `https://api.cloudinary.com/v1_1/dizxfdmk5/upload`,
       {
         method: 'POST',
         body: JSON.stringify({
-          file: fullBase64Data, // Already includes "data:application/pdf;base64,..."
-          upload_preset: 'ml_default',
+          file: base64Data,
+          upload_preset: 'visitor-management-system',
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -35,7 +35,6 @@ export const uploadBase64File = async (
   }
 };
 
-
 export const convertFileToBase64 = (
   file: File
 ): Promise<string> => {
@@ -43,12 +42,11 @@ export const convertFileToBase64 = (
     const reader = new FileReader();
 
     reader.onloadend = () => {
-      const result = reader.result as string; // Includes full "data:<mime>;base64,..."
-      resolve(result);
+      const result = reader.result as string;
+      resolve(result); // ✅ Return the full "data:...;base64,..." string
     };
 
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
   });
 };
-
