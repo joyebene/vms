@@ -390,7 +390,7 @@ function VisitorInfo({ visitor }: { visitor: VisitorForm }) {
           </div>
           )}
           
-          {visitor.checkInTime && (
+          {visitor.createdAt && (
             <div>
               <p className="text-sm text-gray-500">Check-in Time</p>
               <p className="font-medium">{new Date(visitor.createdAt).toLocaleString()}</p>

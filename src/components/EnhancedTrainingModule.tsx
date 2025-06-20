@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { trainingAPI, TrainingSubmissionResponse } from '@/lib/api';
+import { trainingAPI, TrainingSubmissionResponse, Training } from '@/lib/api';
 import {
   BookOpen,
   CheckCircle,
@@ -15,22 +15,7 @@ import {
   Clock
 } from 'lucide-react';
 
-interface TrainingQuestion {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-}
 
-interface Training {
-  _id: string;
-  title: string;
-  description: string;
-  type: 'safety' | 'security' | 'procedure' | 'other';
-  content: string;
-  questions: TrainingQuestion[];
-  requiredScore: number;
-  isActive?: boolean;
-}
 
 interface EnhancedTrainingModuleProps {
   visitorId: string;
@@ -106,7 +91,7 @@ export default function EnhancedTrainingModule({
             setTrainings(trainingsResponse);
             setCurrentTraining(trainingsResponse[0]);
             // Initialize selected answers array with -1 (no selection) for each question
-            setSelectedAnswers(Array(trainingsResponse[0].questions.length).fill(-1));
+            setSelectedAnswers(Array(trainingsResponse[0]?.questions?.length).fill(-1));
           } else {
             // No trainings available
             setError('No training modules available');
@@ -137,7 +122,7 @@ export default function EnhancedTrainingModule({
 
   // Navigate to next question
   const goToNextQuestion = () => {
-    if (currentTraining && currentQuestionIndex < currentTraining.questions.length - 1) {
+    if (currentTraining && currentQuestionIndex < currentTraining?.questions?.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setShowHint(false);
     } else {
@@ -179,10 +164,10 @@ export default function EnhancedTrainingModule({
 
         // Calculate score locally as fallback
         const correctAnswers = selectedAnswers.filter(
-          (answer, index) => answer === currentTraining.questions[index].correctAnswer
+          (answer, index) => answer === currentTraining.questions[index]?.answer
         ).length;
 
-        const calculatedScore = Math.round((correctAnswers / currentTraining.questions.length) * 100);
+        const calculatedScore = Math.round((correctAnswers / currentTraining.questions?.length) * 100);
         const hasPassed = calculatedScore >= (currentTraining.requiredScore || 70);
 
         setScore(calculatedScore);
@@ -201,7 +186,7 @@ export default function EnhancedTrainingModule({
 
   // Progress percentage for quiz
   const progressPercentage = currentTraining
-    ? Math.round(((currentQuestionIndex + 1) / currentTraining.questions.length) * 100)
+    ? Math.round(((currentQuestionIndex + 1) / currentTraining.questions?.length) * 100)
     : 0;
 
   if (isLoading) {
@@ -326,7 +311,7 @@ export default function EnhancedTrainingModule({
         {currentStep === 'quiz' && (
           <div className="mb-6">
             <div className="flex justify-between text-sm text-gray-600 mb-1">
-              <span>Question {currentQuestionIndex + 1} of {currentTraining.questions.length}</span>
+              <span>Question {currentQuestionIndex + 1} of {currentTraining.questions?.length}</span>
               <span>{progressPercentage}% Complete</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -353,7 +338,7 @@ export default function EnhancedTrainingModule({
             </div>
 
             <div className="border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">What You'll Learn:</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">What You&apos;ll Learn:</h3>
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
@@ -415,11 +400,11 @@ export default function EnhancedTrainingModule({
           <div className="space-y-6">
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h3 className="text-xl font-medium text-gray-900 mb-4">
-                {currentTraining.questions[currentQuestionIndex].question}
+                {currentTraining.questions[currentQuestionIndex]?.question}
               </h3>
 
               <div className="space-y-3 mb-6">
-                {currentTraining.questions[currentQuestionIndex].options.map((option, index) => (
+                {currentTraining.questions[currentQuestionIndex]?.options.map((option, index) => (
                   <div
                     key={index}
                     className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
@@ -499,7 +484,7 @@ export default function EnhancedTrainingModule({
                         : 'border-transparent text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
                     }`}
                   >
-                    {currentQuestionIndex < currentTraining.questions.length - 1 ? (
+                    {currentQuestionIndex < currentTraining.questions?.length - 1 ? (
                       <>
                         Next
                         <ChevronRight className="ml-2 h-5 w-5" />
@@ -543,7 +528,7 @@ export default function EnhancedTrainingModule({
                   onClick={() => {
                     setCurrentStep('intro');
                     setCurrentQuestionIndex(0);
-                    setSelectedAnswers(Array(currentTraining.questions.length).fill(-1));
+                    setSelectedAnswers(Array(currentTraining.questions?.length).fill(-1));
                     setScore(null);
                     setPassed(null);
                     setTimeSpent(0);
