@@ -185,9 +185,11 @@ export default function EnhancedTrainingModule({
   };
 
   // Progress percentage for quiz
-  const progressPercentage = currentTraining
-    ? Math.round(((currentQuestionIndex + 1) / currentTraining.questions?.length) * 100)
+  const progressPercentage = currentTraining?.questions?.length
+    ? Math.round(((currentQuestionIndex + 1) / currentTraining.questions.length) * 100)
     : 0;
+
+
 
   if (isLoading) {
     return (
@@ -400,25 +402,23 @@ export default function EnhancedTrainingModule({
           <div className="space-y-6">
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h3 className="text-xl font-medium text-gray-900 mb-4">
-                {currentTraining.questions[currentQuestionIndex]?.question}
+                {currentTraining.questions?.[currentQuestionIndex]?.question ?? "Question not available"}
               </h3>
 
               <div className="space-y-3 mb-6">
-                {currentTraining.questions[currentQuestionIndex]?.options.map((option, index) => (
+                {currentTraining.questions?.[currentQuestionIndex]?.options?.map((option, index) => (
                   <div
                     key={index}
-                    className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedAnswers[currentQuestionIndex] === index
+                    className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${selectedAnswers[currentQuestionIndex] === index
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:bg-gray-50'
-                    }`}
+                      }`}
                     onClick={() => handleAnswerSelection(currentQuestionIndex, index)}
                   >
-                    <div className={`h-5 w-5 rounded-full border flex items-center justify-center mr-3 ${
-                      selectedAnswers[currentQuestionIndex] === index
+                    <div className={`h-5 w-5 rounded-full border flex items-center justify-center mr-3 ${selectedAnswers[currentQuestionIndex] === index
                         ? 'border-blue-500 bg-blue-500'
                         : 'border-gray-300'
-                    }`}>
+                      }`}>
                       {selectedAnswers[currentQuestionIndex] === index && (
                         <div className="h-2 w-2 rounded-full bg-white"></div>
                       )}
@@ -441,10 +441,10 @@ export default function EnhancedTrainingModule({
                       <p className="text-sm text-yellow-700">
                         Hint: Review the section on {
                           currentQuestionIndex === 0 ? 'emergency procedures' :
-                          currentQuestionIndex === 1 ? 'fire safety equipment' :
-                          currentQuestionIndex === 2 ? 'visitor identification' :
-                          currentQuestionIndex === 3 ? 'visitor protocols' :
-                          'emergency contacts'
+                            currentQuestionIndex === 1 ? 'fire safety equipment' :
+                              currentQuestionIndex === 2 ? 'visitor identification' :
+                                currentQuestionIndex === 3 ? 'visitor protocols' :
+                                  'emergency contacts'
                         }.
                       </p>
                     </div>
@@ -466,11 +466,10 @@ export default function EnhancedTrainingModule({
                   <button
                     onClick={goToPreviousQuestion}
                     disabled={currentQuestionIndex === 0}
-                    className={`inline-flex items-center px-4 py-2 border rounded-md text-sm font-medium ${
-                      currentQuestionIndex === 0
+                    className={`inline-flex items-center px-4 py-2 border rounded-md text-sm font-medium ${currentQuestionIndex === 0
                         ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                         : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                    }`}
+                      }`}
                   >
                     <ChevronLeft className="mr-2 h-5 w-5" />
                     Previous
@@ -478,13 +477,13 @@ export default function EnhancedTrainingModule({
                   <button
                     onClick={goToNextQuestion}
                     disabled={selectedAnswers[currentQuestionIndex] === -1}
-                    className={`inline-flex items-center px-4 py-2 border rounded-md text-sm font-medium ${
-                      selectedAnswers[currentQuestionIndex] === -1
+                    className={`inline-flex items-center px-4 py-2 border rounded-md text-sm font-medium ${selectedAnswers[currentQuestionIndex] === -1
                         ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'border-transparent text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                    }`}
+                      }`}
                   >
-                    {currentQuestionIndex < currentTraining.questions?.length - 1 ? (
+                    {currentTraining?.questions && currentQuestionIndex < currentTraining.questions.length
+                      - 1 ? (
                       <>
                         Next
                         <ChevronRight className="ml-2 h-5 w-5" />
@@ -542,11 +541,10 @@ export default function EnhancedTrainingModule({
                 onClick={() => {
                   onComplete(passed);
                 }}
-                className={`inline-flex items-center px-6 py-3 border text-base font-medium rounded-md shadow-sm ${
-                  passed
+                className={`inline-flex items-center px-6 py-3 border text-base font-medium rounded-md shadow-sm ${passed
                     ? 'border-transparent text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
                     : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500'
-                }`}
+                  }`}
               >
                 {passed ? 'Complete Training' : 'Close'}
               </button>
