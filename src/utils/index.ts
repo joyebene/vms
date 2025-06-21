@@ -6,26 +6,34 @@ export interface CloudinaryResponse {
 
 export const uploadBase64File = async (
   base64Data: string,
+  type: string,
   setLoading?: (val: boolean) => void
 ): Promise<string | null> => {
   if (setLoading) setLoading(true);
 
   try {
+    // Strip data URL prefix
+    const base64 = base64Data.split(',')[1]; // Get only the base64 part
+
+    const formData = new FormData();
+    formData.append('file', `data:image/jpeg;base64,${base64}`); // Set mime-type accordingly
+    formData.append('upload_preset', 'visitor-management-system');
+
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/dizxfdmk5/upload`,
+      `https://api.cloudinary.com/v1_1/dizxfdmk5/${type}/upload`,
       {
         method: 'POST',
-        body: JSON.stringify({
-          file: base64Data,
-          upload_preset: 'visitor-management-system',
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        body: formData,
       }
     );
 
     const file: CloudinaryResponse = await res.json();
+
+    if (!res.ok) {
+      console.error('Cloudinary response error:', file);
+      return null;
+    }
+
     return file.secure_url;
   } catch (err) {
     console.error('Cloudinary upload failed:', err);

@@ -73,6 +73,7 @@ export default function TrainingPage() {
 
     try {
       const trainingData = await trainingAPI.getAllTrainings(token);
+      console.log(trainingData)
       setTrainings(trainingData);
     } catch (err) {
       console.error('Error fetching trainings:', err);
@@ -123,7 +124,7 @@ export default function TrainingPage() {
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                   <span className="ml-2 text-gray-600">Loading trainings...</span>
                 </div>
-              ) : trainings.length === 0 ? (
+              ) : trainings?.length === 0 ? (
                 <div className="text-center py-8">
                   <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900">No trainings available</h3>
@@ -131,7 +132,7 @@ export default function TrainingPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {trainings.map((training) => (
+                  {trainings?.map((training) => (
                     <div
                       key={training._id}
                       className={`p-4 rounded-md border ${

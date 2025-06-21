@@ -105,9 +105,10 @@ export interface VisitorForm {
   hostEmployee: string;
   company?: string;
   siteLocation?: string;
-  department: string;
+  department: string; 
   meetingLocation: string;
   checkInTime?: string;
+  checkOutTime?: string;
   checkOutVisitor?: string;
   status: 'pending' | 'approved' | 'checked-in' | 'checked-out' | 'cancelled';
   visitStartDate: string;
@@ -119,7 +120,24 @@ export interface VisitorForm {
   approvedAt?: string;
   notificationSent?: boolean;
   approvalNotificationSent?: boolean;
-  createdAt? : Date;
+  createdAt? : string | null;
+   hazards?: {
+    title: string;
+    risk: string | number;
+    selectedControls: string[];
+  }[];
+  ppe?: {
+    "HARD HAT": 'N' | 'Y';
+    "SAFETY SHOES": 'N' | 'Y';
+    "OVERALLS": 'N' | 'Y';
+    "EYE PROTECTION": 'N' | 'Y';
+    "VEST VEST": 'N' | 'Y';
+    "EAR PROTECTION": 'N' | 'Y';
+    "RESPIRATORY EQUIP": 'N' | 'Y';
+    "GLOVES": 'N' | 'Y';
+    "DUST MASK": 'N' | 'Y';
+    "FALL ARREST": 'N' | 'Y';
+  };
 }
 
 export interface ApiResponse<T> {
@@ -1770,6 +1788,22 @@ export const newVisitorAPI = {
     return await response.json(); // { message, doc }
   },
 
+   checkInVisitor: async (visitorId: string, token: string): Promise<Visitor> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors/${visitorId}/check-in`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Check in visitor error:', error);
+      throw error;
+    }
+  },
+
   checkOutVisitor: async (id: string, token: string) => {
     const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors/${id}/checkout`, {
       method: 'POST',
@@ -1920,7 +1954,7 @@ getVisitorByEmail: async (email: string): Promise<string> => {
 
 
 export const trainingAPI = {
-  getAllTrainings: async (token: string | null): Promise<Training[]> => {
+  getAllTrainings: async (token: string | null) => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/trainings`, {
         method: 'GET',
@@ -1928,8 +1962,9 @@ export const trainingAPI = {
           'Authorization': `Bearer ${token}`,
         },
       });
-
-      return handleResponse(response);
+      const data = await response.json();
+      // console.log(data);
+      return data
     } catch (error) {
       console.error('Get trainings error:', error);
       throw error;

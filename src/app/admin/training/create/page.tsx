@@ -143,7 +143,7 @@ export default function CreateTrainingPage() {
     setError(null);
     setSuccess(null);
 
-    try {
+    try { 
       // Create a new training module
       await trainingAPI.createTraining(formData, token);
 

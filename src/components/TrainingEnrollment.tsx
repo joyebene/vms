@@ -31,10 +31,14 @@ export default function TrainingEnrollment({ visitorId, onEnrollmentSuccess }: T
 
     try {
       const trainingData = await trainingAPI.getAllTrainings(token);
-      // Filter only active trainings
-      const activeTrainings = trainingData.filter(training => training.isActive);
+
+      // Filter only if trainingData is an array
+      const activeTrainings = Array.isArray(trainingData)
+        ? trainingData.filter(training => training.isActive)
+        : [];
+
       setTrainings(activeTrainings);
-      
+
       if (activeTrainings.length > 0) {
         setSelectedTrainingId(activeTrainings[0]._id);
       }
@@ -56,7 +60,7 @@ export default function TrainingEnrollment({ visitorId, onEnrollmentSuccess }: T
     try {
       const enrollment = await trainingAPI.enrollVisitor(visitorId, selectedTrainingId, token);
       setSuccessMessage('Visitor enrolled in training successfully');
-      
+      setTimeout(() => {setSuccessMessage(null)}, 4000)
       if (onEnrollmentSuccess) {
         onEnrollmentSuccess(enrollment);
       }
@@ -143,17 +147,17 @@ export default function TrainingEnrollment({ visitorId, onEnrollmentSuccess }: T
           <div className="bg-gray-50 p-4 rounded-md mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-2">{selectedTraining.title}</h3>
             <p className="text-sm text-gray-600 mb-4">{selectedTraining.description}</p>
-            
+
             <div className="flex items-center text-sm text-gray-500 mb-2">
               <span className="font-medium mr-2">Type:</span>
               <span className="capitalize">{selectedTraining.type}</span>
             </div>
-            
+
             <div className="flex items-center text-sm text-gray-500 mb-2">
               <span className="font-medium mr-2">Questions:</span>
               <span>{selectedTraining?.questions?.length}</span>
             </div>
-            
+
             <div className="flex items-center text-sm text-gray-500">
               <span className="font-medium mr-2">Required Score:</span>
               <span>{selectedTraining.requiredScore}%</span>

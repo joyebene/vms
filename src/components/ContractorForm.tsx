@@ -310,7 +310,7 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const base64 = await convertFileToBase64(file);
       const fullBase64 = `data:${file.type};base64,${base64}`;
-      const url = await uploadBase64File(fullBase64); // Call your Cloudinary upload function
+      const url = await uploadBase64File(fullBase64, "raw"); // Call your Cloudinary upload function
 
       if (url) {
         uploadedDocs.push({
@@ -373,7 +373,7 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         setUploadLoading(true);
 
         // ✅ Upload to Cloudinary
-        const url = await uploadBase64File(base64, setUploadLoading);
+        const url = await uploadBase64File(base64, "images", setUploadLoading);
         setUploadLoading(false);
 
         if (url) {
@@ -857,7 +857,7 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                       Return to Home
                     </Link>
                     <Button type='submit' className="mt-4 w-full sm:w-auto" disabled={loading}>
-                      {loading ? 'Submitting...' : 'Submit'}
+                      {loading ? 'Loading...' : 'Next'}
                     </Button>
                   </div>
                 </CardContent>

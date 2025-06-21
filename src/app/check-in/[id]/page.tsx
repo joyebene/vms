@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
-import { visitorAPI } from '@/lib/api';
-import { Visitor } from '@/lib/api';
+import { newVisitorAPI, visitorAPI } from '@/lib/api';
+import { VisitorForm } from '@/lib/api';
 
 export default function VisitorCheckIn() {
-  const [visitor, setVisitor] = useState<Visitor | null>(null);
+  const [visitor, setVisitor] = useState<VisitorForm | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -25,7 +25,7 @@ export default function VisitorCheckIn() {
       try {
         setIsLoading(true);
         const visitorId = Array.isArray(id) ? id[0] : id;
-        const data = await visitorAPI.getVisitorById(visitorId, token || '');
+        const data = await newVisitorAPI.getSingleVisitorById(visitorId);
         setVisitor(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch visitor details');
@@ -112,12 +112,12 @@ export default function VisitorCheckIn() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium">{visitor.phoneNumber}</p>
+                  <p className="font-medium">{visitor.phone}</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-sm text-gray-500">Company</p>
                   <p className="font-medium">{visitor.company || 'N/A'}</p>
-                </div>
+                </div> */}
                 <div>
                   <p className="text-sm text-gray-500">Purpose</p>
                   <p className="font-medium">{visitor.purpose}</p>
