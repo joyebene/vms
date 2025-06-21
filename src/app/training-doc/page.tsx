@@ -4,6 +4,7 @@ import AppBar from '@/components/AppBar';
 import { useEffect, useState } from 'react';
 import { trainingAPI, Training } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import Link from 'next/link';
 
 type SelectedAnswersMap = Record<number, string>;
 
@@ -95,6 +96,16 @@ export default function TrainingPage() {
     setQuestions([newQuestion, ...questions]);
     setQuestionInput('');
   };
+
+  const passedAnyTraining = Object.values(scores).some(score => score >= 70);
+
+  const handleRedoTraining = () => {
+  setSelectedAnswers({});
+  setShowResults({});
+  setScores({});
+};
+
+
 
   return (
     <div>
@@ -240,6 +251,25 @@ export default function TrainingPage() {
             </div>
           )}
         </section>
+        <div className="text-center mt-10">
+          {passedAnyTraining ? (
+            <Link
+              href="/"
+              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition"
+            >
+              🎉 Finish
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 transition"
+              onClick={() => {window.scrollTo({ top: 0, behavior: 'smooth' }); handleRedoTraining()}}
+            >
+              🔁 Redo Training
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   );

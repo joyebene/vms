@@ -40,8 +40,8 @@ type FormData = {
     "DUST MASK": 'N' | 'Y';
     "FALL ARREST": 'N' | 'Y';
   };
-   documents: DocumentItem[];
-   pics?: string;
+  documents: DocumentItem[];
+  pics?: string;
 };
 
 const defaultVisitorForm = (formType: string) => ({
@@ -142,11 +142,19 @@ export default function FormPage() {
       }
 
       setSuccess(`Your visit has been scheduled successfully! Please check in at the reception desk when you arrive. ${formType === "visitor" ? visitorForm.hostEmployee : contractorForm.hostEmployee} has been notified of your upcoming visit on ${new Date(formType === "contractor" ? visitorForm.visitStartDate : contractorForm.visitStartDate).toLocaleDateString()}.`);
-      alert(`${formType === 'visitor' ? 'Visitor' : 'Contractor'} Form submitted successfully!`);
+      setTimeout(() => { setError("") }, 3000)
+
+      if (formType === "visitor") {
+        alert("Visitor Form submitted Successfully!");
+      } else {
+        alert("Redirecting You to Training Page!");
+      }
+
 
     } catch (error) {
       console.error('Submission failed:', error);
       setError('Your form was not submitted. Please try again.');
+      setTimeout(() => { setError("") }, 3000)
       alert('Something went wrong. Please try again.');
     }
   };

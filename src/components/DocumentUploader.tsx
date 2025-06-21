@@ -2,12 +2,13 @@
 
 import { useState, useRef } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { documentAPI, Document } from '@/lib/api';
+import { newVisitorAPI, Doc } from '@/lib/api';
 import { Upload, File, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { convertFileToBase64, uploadBase64File } from '../utils'; // ensure you have this
 
 interface DocumentUploaderProps {
   visitorId: string;
-  onUploadSuccess?: (document: Document) => void;
+  onUploadSuccess?: (document: Doc) => void;
 }
 
 export default function DocumentUploader({ visitorId, onUploadSuccess }: DocumentUploaderProps) {
@@ -27,6 +28,8 @@ export default function DocumentUploader({ visitorId, onUploadSuccess }: Documen
     }
   };
 
+  const MAX_FILE_SIZE_MB = 5;
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -40,32 +43,38 @@ export default function DocumentUploader({ visitorId, onUploadSuccess }: Documen
       return;
     }
 
+    const fileSizeInMB = file.size / (1024 * 1024);
+    if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+      setError('File exceeds the 5MB size limit');
+      return;
+    }
+
     setIsUploading(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      const uploadedDocument = await documentAPI.uploadDocument(
-        file,
-        visitorId,
-        documentType,
-        description,
-        token
-      );
+      const base64 = await convertFileToBase64(file);
+      const fullBase64 = `data:${file.type};base64,${base64}`;
+      const url = await uploadBase64File(fullBase64, 'raw');
+
+      if (!url) throw new Error('Cloud upload failed');
+
+      const uploadedDocument: Doc = {
+        name: file.name,
+        url,
+        type: documentType,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      // Save to backend
+      await newVisitorAPI.addDocument(visitorId, uploadedDocument);
 
       setSuccessMessage(`Document "${file.name}" uploaded successfully`);
       setFile(null);
       setDescription('');
-
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-
-      // Notify parent component
-      if (onUploadSuccess) {
-        onUploadSuccess(uploadedDocument);
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (onUploadSuccess) onUploadSuccess(uploadedDocument);
     } catch (err) {
       console.error('Error uploading document:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload document');
@@ -86,28 +95,20 @@ export default function DocumentUploader({ visitorId, onUploadSuccess }: Documen
       <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Document</h2>
 
       {error && (
-        <div
-          className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded mb-4 flex items-start"
-          role="alert"
-          aria-labelledby="upload-error-heading"
-        >
-          <AlertCircle className="h-5 w-5 mr-2 mt-0.5" aria-hidden="true" />
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded mb-4 flex items-start">
+          <AlertCircle className="h-5 w-5 mr-2 mt-0.5" />
           <div>
-            <p id="upload-error-heading" className="font-medium">Error</p>
+            <p className="font-medium">Error</p>
             <p>{error}</p>
           </div>
         </div>
       )}
 
       {successMessage && (
-        <div
-          className="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded mb-4 flex items-start"
-          role="status"
-          aria-labelledby="upload-success-heading"
-        >
-          <CheckCircle className="h-5 w-5 mr-2 mt-0.5" aria-hidden="true" />
+        <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded mb-4 flex items-start">
+          <CheckCircle className="h-5 w-5 mr-2 mt-0.5" />
           <div>
-            <p id="upload-success-heading" className="font-medium">Success</p>
+            <p className="font-medium">Success</p>
             <p>{successMessage}</p>
           </div>
         </div>
@@ -153,16 +154,15 @@ export default function DocumentUploader({ visitorId, onUploadSuccess }: Documen
           {file ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-3">
               <div className="flex items-center overflow-hidden">
-                <File className="h-5 w-5 flex-shrink-0 text-blue-500 mr-2" aria-hidden="true" />
+                <File className="h-5 w-5 flex-shrink-0 text-blue-500 mr-2" />
                 <span className="text-sm text-gray-900 truncate">{file.name}</span>
               </div>
               <button
                 type="button"
                 onClick={clearFile}
                 className="text-gray-500 hover:text-gray-700 mt-2 sm:mt-0 self-end sm:self-auto"
-                aria-label="Remove selected file"
               >
-                <X className="h-5 w-5" aria-hidden="true" />
+               { <X className="h-5 w-5" /> }
               </button>
             </div>
           ) : (
@@ -178,11 +178,11 @@ export default function DocumentUploader({ visitorId, onUploadSuccess }: Documen
               }}
             >
               <div className="space-y-1 text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" aria-hidden="true" />
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
                 <div className="flex flex-col sm:flex-row items-center text-sm text-gray-600">
                   <label
                     htmlFor="file-upload"
-                    className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                    className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500"
                   >
                     <span>Upload a file</span>
                     <input
@@ -192,13 +192,12 @@ export default function DocumentUploader({ visitorId, onUploadSuccess }: Documen
                       className="sr-only"
                       ref={fileInputRef}
                       onChange={handleFileChange}
-                      aria-label="Upload document file"
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     />
                   </label>
                   <p className="pl-1 mt-1 sm:mt-0">or drag and drop</p>
                 </div>
-                <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG up to 10MB</p>
+                <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG up to 5MB</p>
               </div>
             </div>
           )}
@@ -209,17 +208,15 @@ export default function DocumentUploader({ visitorId, onUploadSuccess }: Documen
             type="submit"
             disabled={isUploading || !file}
             className="inline-flex items-center px-6 py-3 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-base sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-live="polite"
           >
             {isUploading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2" aria-hidden="true"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
                 <span>Uploading...</span>
-                <span className="sr-only">Uploading document, please wait</span>
               </>
             ) : (
               <>
-                <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
+                <Upload className="mr-2 h-4 w-4" />
                 <span>Upload Document</span>
               </>
             )}

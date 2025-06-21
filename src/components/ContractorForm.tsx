@@ -373,7 +373,7 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         setUploadLoading(true);
 
         // ✅ Upload to Cloudinary
-        const url = await uploadBase64File(base64, "images", setUploadLoading);
+        const url = await uploadBase64File(base64, "image", setUploadLoading);
         setUploadLoading(false);
 
         if (url) {
@@ -577,7 +577,9 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className={`w-[80%] md:w-2/3 lg:w-2/4 h-fit  border-2 border-gray-300 p-2 bg-white rounded-3xl my-4 mx-auto ${form.pics ? "p-1" : "p-10"} `} onDrop={(e) => handleFileUpload(e)}
+                  <div>
+                    <h2 className="text-sm md:text-base text-gray-700 font-semibold">Upload Profile Picture</h2>
+                     <div className={`w-[80%] md:w-2/3 lg:w-2/4 h-fit  border-2 border-gray-300 p-2 bg-white rounded-3xl my-4 mx-auto ${form.pics ? "p-1" : "p-10"} `} onDrop={(e) => handleFileUpload(e)}
                     onDragOver={(e) => e.preventDefault()}>
                     <label htmlFor="pics">
                       {form.pics ? (
@@ -610,6 +612,8 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                       />
                     </label>
                   </div>
+                  </div>
+                 
                 </CardContent>
               </Card>
 

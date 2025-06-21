@@ -1,7 +1,5 @@
-  // cloudinaryUpload.ts
 export interface CloudinaryResponse {
   secure_url: string;
-  // Add other properties if needed
 }
 
 export const uploadBase64File = async (
@@ -12,11 +10,8 @@ export const uploadBase64File = async (
   if (setLoading) setLoading(true);
 
   try {
-    // Strip data URL prefix
-    const base64 = base64Data.split(',')[1]; // Get only the base64 part
-
     const formData = new FormData();
-    formData.append('file', `data:image/jpeg;base64,${base64}`); // Set mime-type accordingly
+    formData.append('file', base64Data); // Pass full data URL
     formData.append('upload_preset', 'visitor-management-system');
 
     const res = await fetch(
@@ -33,7 +28,8 @@ export const uploadBase64File = async (
       console.error('Cloudinary response error:', file);
       return null;
     }
-
+    console.log(file.secure_url);
+    
     return file.secure_url;
   } catch (err) {
     console.error('Cloudinary upload failed:', err);
@@ -43,15 +39,13 @@ export const uploadBase64File = async (
   }
 };
 
-export const convertFileToBase64 = (
-  file: File
-): Promise<string> => {
+export const convertFileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
     reader.onloadend = () => {
       const result = reader.result as string;
-      resolve(result); // ✅ Return the full "data:...;base64,..." string
+      resolve(result); // Already in "data:image/png;base64,..." format
     };
 
     reader.onerror = (error) => reject(error);

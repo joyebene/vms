@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import DocumentUploader from '@/components/DocumentUploader';
 import EnhancedDocumentViewer from '@/components/EnhancedDocumentViewer';
-import { visitorAPI, Visitor } from '@/lib/api';
+import { newVisitorAPI, VisitorForm } from '@/lib/api';
 import { FileText, Search, AlertCircle } from 'lucide-react';
 
 export default function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedVisitorId, setSelectedVisitorId] = useState<string | null>(null);
-  const [visitors, setVisitors] = useState<Visitor[]>([]);
-  const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
+  const [selectedVisitor, setSelectedVisitor] = useState<VisitorForm | null>(null);
+  const [visitors, setVisitors] = useState<VisitorForm[]>([]);
+  const [filteredVisitors, setFilteredVisitors] = useState<VisitorForm[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [documentsUpdated, setDocumentsUpdated] = useState(0);
@@ -19,7 +19,7 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     fetchVisitors();
-  }, [token]);
+  }, [token, documentsUpdated]);
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -44,16 +44,13 @@ export default function DocumentsPage() {
     setError(null);
 
     try {
-      // For admin users, get all visitors; for others, get only their hosted visitors
-      const visitorData = user?.role === 'admin' || user?.role === 'manager' || user?.role === 'security'
-        ? await visitorAPI.getAllVisitors(token)
-        : await visitorAPI.getVisitorsByHost(token);
-      setVisitors(visitorData);
-      setFilteredVisitors(visitorData);
-
-      // Select the first visitor by default if available
-      if (visitorData.length > 0) {
-        setSelectedVisitorId(visitorData[0]._id);
+      const visitorData: VisitorForm[] = await newVisitorAPI.getAll();
+      const contractorVisitor = visitorData.filter(v => v.visitorCategory === "contractor");
+      setVisitors(contractorVisitor);
+      setFilteredVisitors(contractorVisitor);
+      if (contractorVisitor.length > 0) {
+        const selected = contractorVisitor.find(v => v._id === selectedVisitor?._id) || contractorVisitor[0];
+        setSelectedVisitor(selected);
       }
     } catch (err) {
       console.error('Error fetching visitors:', err);
@@ -64,7 +61,6 @@ export default function DocumentsPage() {
   };
 
   const handleDocumentChange = () => {
-    // Increment to trigger a re-render of the DocumentList component
     setDocumentsUpdated(prev => prev + 1);
   };
 
@@ -141,9 +137,9 @@ export default function DocumentsPage() {
                     {filteredVisitors.map((visitor) => (
                       <li key={visitor._id}>
                         <button
-                          onClick={() => setSelectedVisitorId(visitor._id)}
+                          onClick={() => setSelectedVisitor(visitor)}
                           className={`w-full text-left px-4 py-3 rounded-md ${
-                            selectedVisitorId === visitor._id
+                            selectedVisitor?._id === visitor._id
                               ? 'bg-blue-50 border-l-4 border-blue-500'
                               : 'hover:bg-gray-50'
                           }`}
@@ -165,15 +161,14 @@ export default function DocumentsPage() {
           </div>
 
           <div className="md:col-span-2 space-y-6">
-            {selectedVisitorId ? (
+            {selectedVisitor ? (
               <>
                 <DocumentUploader
-                  visitorId={selectedVisitorId}
+                  visitorId={selectedVisitor._id}
                   onUploadSuccess={handleDocumentChange}
                 />
                 <EnhancedDocumentViewer
-                  visitorId={selectedVisitorId}
-                  onDocumentDeleted={handleDocumentChange}
+                  documents={selectedVisitor.documents || []}
                 />
               </>
             ) : (

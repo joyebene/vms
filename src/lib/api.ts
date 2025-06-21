@@ -95,6 +95,19 @@ export interface Visitor {
   notificationSent?: boolean;
   approvalNotificationSent?: boolean;
 }
+
+type DocumentItem =
+  { name: string; file?: File; url: string; type?: string; uploadedAt?: string };
+
+export type Doc = {
+  name: string;
+  file?: File;
+  url: string;
+  type?: string;
+  uploadedAt?: string; // <-- remove the optional `?`
+};
+
+
 export interface VisitorForm {
   _id: string;
   firstName: string;
@@ -138,6 +151,7 @@ export interface VisitorForm {
     "DUST MASK": 'N' | 'Y';
     "FALL ARREST": 'N' | 'Y';
   };
+    documents: DocumentItem[];
 }
 
 export interface ApiResponse<T> {
@@ -1682,13 +1696,6 @@ export const analyticsAPI = {
 };
 
 
-export interface DocumentItem {
-  name: string;        // The name of the file
-  url: string;         // The public URL/path to access the uploaded file
-  type: string;        // The MIME type (e.g., "application/pdf")
-  file?: File; 
-  fileType: string        // Optional original file object (useful before uploading)
-}
 
 
 
@@ -1949,6 +1956,22 @@ getVisitorByEmail: async (email: string): Promise<string> => {
       throw error;
     }
   },
+   addDocument: async (visitorId: string, document: any) => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors/${visitorId}/documents`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(document),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Failed to upload document');
+    }
+
+    return res.json();
+  },
 };
 
 
@@ -2108,6 +2131,8 @@ export const trainingAPI = {
       throw error;
     }
   },
+
+
 };
 
 
