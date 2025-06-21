@@ -44,9 +44,9 @@ export default function VisitorDetails() {
 
         const data = await newVisitorAPI.getSingleVisitorById(visitorId);
         console.log(data);
-        
+
         setVisitor(data);
-      
+
       } catch (err) {
         console.error('Error fetching visitor:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch visitor details');
@@ -219,29 +219,29 @@ export default function VisitorDetails() {
 
                 {visitor.visitorCategory === "contractor" && (
                   <button type="button"
-                  onClick={() => setShowTraining(true)}
-                  className={`flex items-center ${visitor.trainingCompleted ? 'bg-green-600' : 'bg-yellow-600'} text-white px-2 md:px-4 py-1 md:py-2 rounded-lg text-sm ms:text-base`}
-                >
-                  <BookOpen className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                  {visitor.trainingCompleted ? 'Training Completed' : 'Take Safety Training'}
-                </button>
+                    onClick={() => setShowTraining(true)}
+                    className={`flex items-center ${visitor.trainingCompleted ? 'bg-green-600' : 'bg-yellow-600'} text-white px-2 md:px-4 py-1 md:py-2 rounded-lg text-sm ms:text-base`}
+                  >
+                    <BookOpen className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                    {visitor.trainingCompleted ? 'Training Completed' : 'Take Safety Training'}
+                  </button>
                 )}
-               
+
                 {visitor.visitorCategory === "contractor" && (
                   <button type="button"
-                  onClick={() => setShowDocuments(!showDocuments)}
-                  className="flex items-center bg-purple-600 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg hover:bg-purple-700 text-sm md:text-base"
-                >
-                  <FileText className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                  {showDocuments ? 'Hide Documents' : 'Manage Documents'}
-                  {showDocuments && (
-                    <div>
-                      {documentsUpdated}
-                    </div>
-                  )}
-                </button>
+                    onClick={() => setShowDocuments(!showDocuments)}
+                    className="flex items-center bg-purple-600 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg hover:bg-purple-700 text-sm md:text-base"
+                  >
+                    <FileText className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                    {showDocuments ? 'Hide Documents' : 'Manage Documents'}
+                    {showDocuments && (
+                      <div>
+                        {documentsUpdated}
+                      </div>
+                    )}
+                  </button>
                 )}
-                
+
 
                 {visitor.status === 'approved' && (
                   <button
@@ -288,10 +288,8 @@ export default function VisitorDetails() {
                         visitorId={visitor._id}
                         onUploadSuccess={handleDocumentChange}
                       />
-
                       <EnhancedDocumentViewer
-                        visitorId={visitor._id}
-                        onDocumentDeleted={handleDocumentChange}
+                        documents={visitor.documents || []}
                       />
                     </div>
                   </div>
@@ -359,11 +357,11 @@ function VisitorInfo({ visitor }: { visitor: VisitorForm }) {
             <p className="text-sm text-gray-500">Visit End Date & Time</p>
             <p className="font-medium">{visitor.visitEndDate ? new Date(visitor.visitEndDate).toLocaleString() : 'Not specified'}</p>
           </div>
-            <div>
-              <p className="text-sm text-gray-500">Site Location</p>
-              <p className="font-medium">{visitor.siteLocation}</p>
-            </div>
-      
+          <div>
+            <p className="text-sm text-gray-500">Site Location</p>
+            <p className="font-medium">{visitor.siteLocation}</p>
+          </div>
+
           <div>
             <p className="text-sm text-gray-500">Visitor Category</p>
             <p className="font-medium">{visitor.visitorCategory || 'Not specified'}</p>
@@ -374,25 +372,25 @@ function VisitorInfo({ visitor }: { visitor: VisitorForm }) {
               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                 ${visitor.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                   visitor.status === 'approved' ? 'bg-blue-100 text-blue-800' :
-                  visitor.status === 'checked-in' ? 'bg-green-100 text-green-800' :
-                  visitor.status === 'checked-out' ? 'bg-gray-100 text-gray-800' :
-                  'bg-red-100 text-red-800'}`}>
+                    visitor.status === 'checked-in' ? 'bg-green-100 text-green-800' :
+                      visitor.status === 'checked-out' ? 'bg-gray-100 text-gray-800' :
+                        'bg-red-100 text-red-800'}`}>
                 {visitor.status}
               </span>
             </p>
           </div>
           {visitor.visitorCategory === 'contractor' && (
             <div>
-            <p className="text-sm text-gray-500">Training</p>
-            <p className="font-medium">
-              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+              <p className="text-sm text-gray-500">Training</p>
+              <p className="font-medium">
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                 ${visitor.trainingCompleted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                {visitor.trainingCompleted ? 'Completed' : 'Required'}
-              </span>
-            </p>
-          </div>
+                  {visitor.trainingCompleted ? 'Completed' : 'Required'}
+                </span>
+              </p>
+            </div>
           )}
-          
+
           {visitor.createdAt && (
             <div>
               <p className="text-sm text-gray-500">Check-in Time</p>
