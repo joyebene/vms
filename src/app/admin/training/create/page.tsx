@@ -6,6 +6,10 @@ import { useAuth } from '@/lib/AuthContext';
 import { trainingAPI, Training } from '@/lib/api';
 import { ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { convertFileToBase64, uploadBase64File } from "../../../../utils"
+
+
+
 
 export default function CreateTrainingPage() {
   const router = useRouter();
@@ -13,6 +17,8 @@ export default function CreateTrainingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [videoUploadLoading, setVideoUploadLoading] = useState(false)
+  const [bookUploadLoading, setBookUploadLoading] = useState(false)
 
   const [formData, setFormData] = useState<Partial<Training>>({
     title: '',
@@ -26,6 +32,8 @@ export default function CreateTrainingPage() {
         answer: 0
       }
     ],
+    videos: [{ name: '', url: '' }],
+    books: [{ name: '', url: '' }],
     requiredScore: 70,
     isActive: true
   });
@@ -143,7 +151,7 @@ export default function CreateTrainingPage() {
     setError(null);
     setSuccess(null);
 
-    try { 
+    try {
       // Create a new training module
       await trainingAPI.createTraining(formData, token);
 
@@ -160,6 +168,153 @@ export default function CreateTrainingPage() {
       setIsSubmitting(false);
     }
   };
+
+  const MAX_VIDEO_SIZE_MB = 100;
+  const MAX_BOOK_SIZE_MB = 20;
+
+
+  type UploadEvent =
+    | React.ChangeEvent<HTMLInputElement>
+    | React.DragEvent<HTMLDivElement>;
+
+
+  const handleVideoUpload = async (index: number, e: UploadEvent) => {
+    e.preventDefault();
+    const file = "dataTransfer" in e ? e.dataTransfer.files?.[0] : e.target.files?.[0];
+
+    if (!file) return alert("No video selected");
+
+    const sanitizedFile = new File([file], file.name.replace(/\//g, '-'), { type: file.type });
+    const fileSizeInMB = sanitizedFile.size / (1024 * 1024);
+
+    if (fileSizeInMB > MAX_VIDEO_SIZE_MB) {
+      alert("Video exceeds 100MB limit. Please upload a smaller file.");
+      return;
+    }
+
+    try {
+      setVideoUploadLoading(true);
+      const base64 = await convertFileToBase64(sanitizedFile);
+      const url = await uploadBase64File(base64, "video", setVideoUploadLoading);
+      setVideoUploadLoading(false);
+
+      if (url) {
+        setFormData(prev => {
+          const updated = [...(prev.videos || [])];
+          updated[index] = { name: file.name, url: url };
+          const newFormData = { ...prev, videos: updated };
+          console.log("Updated videos inside setFormData:", newFormData.videos); // ✅ See new values
+          return newFormData;
+        });
+
+
+        console.log("Video upload successful");
+      } else {
+        console.warn("Video upload failed: No URL returned");
+      }
+    } catch (err) {
+      console.error("Video upload failed:", err);
+      setVideoUploadLoading(false);
+    }
+  };
+
+
+  const handleBookUpload = async (index: number, e: UploadEvent) => {
+    e.preventDefault();
+    const file = "dataTransfer" in e ? e.dataTransfer.files?.[0] : e.target.files?.[0];
+
+    if (!file) return alert("No book file selected");
+
+    const sanitizedFile = new File([file], file.name.replace(/\//g, '-'), { type: file.type });
+    const fileSizeInMB = sanitizedFile.size / (1024 * 1024);
+
+    if (fileSizeInMB > MAX_BOOK_SIZE_MB) {
+      alert("Book file exceeds 20MB limit. Please upload a smaller file.");
+      return;
+    }
+
+    try {
+      setBookUploadLoading(true);
+      const base64 = await convertFileToBase64(sanitizedFile);
+      const url = await uploadBase64File(base64, "raw", setBookUploadLoading);
+      setBookUploadLoading(false);
+
+      if (url) {
+        setFormData(prev => {
+          const updated = [...(prev.books || [])];
+          updated[index] = { name: file.name, url: url }; // ✅ Update both name and url
+          return { ...prev, books: updated };
+        });
+        console.log(formData);
+
+        console.log("Book upload successful");
+      } else {
+        console.warn("Book upload failed: No URL returned");
+      }
+    } catch (err) {
+      console.error("Book upload failed:", err);
+      setBookUploadLoading(false);
+    }
+  };
+
+
+  type VideoField = 'name' | 'url';
+
+  const handleVideoChange = (index: number, field: VideoField, value: string) => {
+    setFormData(prev => {
+      const updated = [...(prev.videos || [])];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, videos: updated };
+    });
+  };
+
+  const addVideo = () => {
+    setFormData(prev => ({
+      ...prev,
+      videos: [...(prev.videos || []), { name: '', url: '' }]
+    }));
+  };
+
+  const removeVideo = (index: number) => {
+    setFormData(prev => {
+      const updated = [...(prev.videos || [])];
+      updated.splice(index, 1);
+      return { ...prev, videos: updated };
+    });
+  };
+
+
+  type BookField = 'name' | 'url';
+
+  const handleBookChange = (index: number, field: BookField, value: string) => {
+    setFormData(prev => {
+      const updated = [...(prev.books || [])]; // ✅ fix: use books not videos
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, books: updated }; // ✅ fix: return books not videos
+    });
+  };
+
+
+  const addBook = () => {
+    setFormData(prev => ({
+      ...prev,
+      books: [...(prev.books || []), { name: '', url: '' }]
+    }));
+  };
+
+  const removeBook = (index: number) => {
+    setFormData(prev => {
+      const updated = [...(prev.books || [])];
+      updated.splice(index, 1);
+      return { ...prev, books: updated };
+    });
+  };
+
+
+  console.log(formData);
+  
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -303,7 +458,7 @@ export default function CreateTrainingPage() {
                       onClick={() => removeQuestion(questionIndex)}
                       className="text-red-600 hover:text-red-800"
                     >
-                      { <Trash2 className="h-4 w-4" /> }
+                      {<Trash2 className="h-4 w-4" />}
                     </button>
                   )}
                 </div>
@@ -344,6 +499,81 @@ export default function CreateTrainingPage() {
               </div>
             ))}
           </div>
+
+          {/* Video Upload */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Videos</h3>
+              <button type="button" onClick={addVideo} className="text-blue-600 hover:underline">Add Video</button>
+            </div>
+            {(formData.videos || []).map((video, index) => (
+              <div key={index} className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Video Name"
+                  value={video.name}
+                  onChange={(e) => handleVideoChange(index, 'name', e.target.value)}
+                  className="w-full px-3 py-2 mb-2 border border-gray-300 rounded-md"
+                />
+                <div className="relative w-[80%] sm:w-full overflow-hidden">
+                  <input
+                    placeholder="Video"
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleVideoUpload(index, e)}
+                    className="mb-2 w-full text-xs file:text-xs file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-100 file:text-gray-700"
+                  />
+                </div>
+
+                {videoUploadLoading && (
+                  <p className="text-blue-600 text-sm">Uploading video...</p>
+                )}
+                {video.url && !videoUploadLoading && (
+                  <p className="text-green-600 text-sm">Uploaded ✅</p>
+                )}
+
+                <button onClick={() => removeVideo(index)} className="text-red-600 text-sm hover:underline">Remove</button>
+              </div>
+            ))}
+          </div>
+
+          {/* Books Upload */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Books</h3>
+              <button type="button" onClick={addBook} className="text-blue-600 hover:underline">Add Book</button>
+            </div>
+            {(formData.books || []).map((book, index) => (
+              <div key={index} className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Book Name"
+                  value={book.name}
+                  onChange={(e) => handleBookChange(index, 'name', e.target.value)}
+                  className="w-full px-3 py-2 mb-2 border border-gray-300 rounded-md"
+                />
+                <div className="relative w-[80%] sm:w-full overflow-hidden">
+                  <input
+                    placeholder='book'
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    disabled={videoUploadLoading} 
+                    onChange={(e) => handleBookUpload(index, e)}
+                    className="mb-2 w-full text-xs file:text-xs file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-100 file:text-gray-700"
+                  />
+                </div>
+                {bookUploadLoading && (
+                  <p className="text-blue-600 text-sm">Uploading book...</p>
+                )}
+                {book.url && !bookUploadLoading && (
+                  <p className="text-green-600 text-sm">Uploaded ✅</p>
+                )}
+
+                <button onClick={() => removeBook(index)} className="text-red-600 text-sm hover:underline">Remove</button>
+              </div>
+            ))}
+          </div>
+
 
           <div className="flex items-center mb-6">
             <input

@@ -10,12 +10,11 @@ type SelectedAnswersMap = Record<number, string>;
 
 export default function TrainingPage() {
   const [trainings, setTrainings] = useState<Training[]>([]);
-  const [questionInput, setQuestionInput] = useState('');
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, SelectedAnswersMap>>({});
   const [showResults, setShowResults] = useState<Record<number, boolean>>({});
   const [scores, setScores] = useState<Record<number, number>>({});
   const [signedBooks, setSignedBooks] = useState<string[]>([]);
-  const [questions, setQuestions] = useState<{ question: string; answer: string }[]>([]);
+
 
   const { token } = useAuth();
 
@@ -53,10 +52,13 @@ export default function TrainingPage() {
     let correct = 0;
 
     quizQuestions.forEach((q, i) => {
-      if (Number(selected[i]) === q.answer) {
+      const selectedOption = selected[i];
+      const correctOption = q.options[q.answer];
+      if (selectedOption === correctOption) {
         correct++;
       }
     });
+
 
     const total = quizQuestions.length;
     const percentage = Math.round((correct / total) * 100);
@@ -84,26 +86,14 @@ export default function TrainingPage() {
     }
   };
 
-  const handleQuestionSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!questionInput.trim()) return;
-
-    const newQuestion = {
-      question: questionInput,
-      answer: 'Thank you for your question. Our team will respond shortly.',
-    };
-
-    setQuestions([newQuestion, ...questions]);
-    setQuestionInput('');
-  };
 
   const passedAnyTraining = Object.values(scores).some(score => score >= 70);
 
   const handleRedoTraining = () => {
-  setSelectedAnswers({});
-  setShowResults({});
-  setScores({});
-};
+    setSelectedAnswers({});
+    setShowResults({});
+    setScores({});
+  };
 
 
 
@@ -125,10 +115,12 @@ export default function TrainingPage() {
                 <ul className="space-y-6">
                   {training.videos.map((video, i) => (
                     <li key={i}>
-                      <p className="text-lg font-medium mb-2 text-gray-700">{video.name}</p>
-                      <video controls className="w-full rounded-lg shadow-md">
-                        <source src={video.url} type="video/mp4" />
-                      </video>
+                      <p className="text-sm md:text-lg font-medium mb-2 text-gray-700">{video.name}</p>
+                      <div className="w-full h-40 mt-6">
+                        <video controls className="w-full rounded-lg shadow-md h-40">
+                          <source src={video.url} type="video/mp4" />
+                        </video>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -197,12 +189,14 @@ export default function TrainingPage() {
                         ))}
                       </div>
                       {showResults[index] && (
-                        <p className={`mt-2 font-medium ${Number(selectedAnswers[index]?.[i]) === q.answer ? 'text-green-600' : 'text-red-600'}`}>
-                          {Number(selectedAnswers[index]?.[i]) === q.answer
+                        <p className={`mt-2 font-medium ${q.options[q.answer] === selectedAnswers[index]?.[i] ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                          {q.options[q.answer] === selectedAnswers[index]?.[i]
                             ? '✅ Correct'
                             : `❌ Correct answer: ${q.options[q.answer]}`}
                         </p>
                       )}
+
                     </div>
                   ))}
                   <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition">
@@ -221,36 +215,7 @@ export default function TrainingPage() {
           </div>
         ))}
 
-        {/* Ask a Question */}
-        <section className="bg-white border rounded-2xl p-6 shadow-lg">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Ask a Question</h2>
-          <form onSubmit={handleQuestionSubmit} className="space-y-4">
-            <textarea
-              value={questionInput}
-              onChange={(e) => setQuestionInput(e.target.value)}
-              placeholder="Type your question here..."
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-            />
-            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition">
-              Submit Question
-            </button>
-          </form>
 
-          {questions.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-2 text-gray-700">Previous Questions</h3>
-              <ul className="space-y-4">
-                {questions.map((q, index) => (
-                  <li key={index} className="border-t pt-4">
-                    <p className="font-medium text-gray-800">Q: {q.question}</p>
-                    <p className="text-sm text-gray-600 mt-1">A: {q.answer}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
         <div className="text-center mt-10">
           {passedAnyTraining ? (
             <Link
@@ -263,7 +228,7 @@ export default function TrainingPage() {
             <button
               type="button"
               className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 transition"
-              onClick={() => {window.scrollTo({ top: 0, behavior: 'smooth' }); handleRedoTraining()}}
+              onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); handleRedoTraining() }}
             >
               🔁 Redo Training
             </button>

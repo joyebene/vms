@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
 import { newVisitorAPI, VisitorForm } from '@/lib/api';
-import { ArrowLeft, QrCode, LogOut, BookOpen, CreditCard, FileText, AlertCircle, Clock } from 'lucide-react';
+import { ArrowLeft, QrCode, LogOut, CreditCard, FileText, AlertCircle, Clock } from 'lucide-react';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import EnhancedTrainingModule from '@/components/EnhancedTrainingModule';
 import DocumentUploader from '@/components/DocumentUploader';
@@ -216,16 +216,6 @@ export default function VisitorDetails() {
                   <CreditCard className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                   View Badge
                 </Link>
-
-                {visitor.visitorCategory === "contractor" && (
-                  <button type="button"
-                    onClick={() => setShowTraining(true)}
-                    className={`flex items-center ${visitor.trainingCompleted ? 'bg-green-600' : 'bg-yellow-600'} text-white px-2 md:px-4 py-1 md:py-2 rounded-lg text-sm ms:text-base`}
-                  >
-                    <BookOpen className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                    {visitor.trainingCompleted ? 'Training Completed' : 'Take Safety Training'}
-                  </button>
-                )}
 
                 {visitor.visitorCategory === "contractor" && (
                   <button type="button"
