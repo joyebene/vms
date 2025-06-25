@@ -318,7 +318,7 @@ export default function TrainingPage() {
       </div>
 
       {editingTraining && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h2 className="text-lg font-semibold mb-4">Edit Training</h2>
             <label className="block mb-2">
