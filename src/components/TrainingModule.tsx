@@ -47,7 +47,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
 
         try {
           // Fetch available trainings
-          const trainingsResponse = await trainingAPI.getAllTrainings(token);
+          const trainingsResponse = await trainingAPI.getAllTrainings();
 
           if (Array.isArray(trainingsResponse) && trainingsResponse.length > 0) {
             setTrainings(trainingsResponse);
