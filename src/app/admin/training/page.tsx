@@ -76,7 +76,7 @@ export default function TrainingPage() {
     setIsLoadingTrainings(true);
 
     try {
-      const trainingData = await trainingAPI.getAllTrainings(token);
+      const trainingData = await trainingAPI.getAllTrainings();
       console.log(trainingData)
       setTrainings(trainingData);
     } catch (err) {
