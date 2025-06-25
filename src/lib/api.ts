@@ -2090,8 +2090,11 @@ export const trainingAPI = {
         },
         body: JSON.stringify(trainingData),
       });
-
-      return handleResponse(response);
+      const data = await response.json();
+      console.log(data);
+      
+      return data;
+      // return handleResponse(response);
     } catch (error) {
       console.error('Update training error:', error);
       throw error;

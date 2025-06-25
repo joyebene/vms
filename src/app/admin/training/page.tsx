@@ -102,7 +102,9 @@ export default function TrainingPage() {
       console.log("Training updated:", updatedTraining);
       // Update training in state
       setTrainings(prev =>
-        prev.map(t => (t._id === updatedTraining._id ? updatedTraining : t))
+        prev.map(t =>
+          t._id === updatedTraining._id ? { ...t, ...editForm } : t
+        )
       );
 
       // Close modal and reset
