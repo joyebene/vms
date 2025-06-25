@@ -135,93 +135,99 @@ export default function EnhancedDocumentViewer({ documents }: EnhancedDocumentVi
       <h2 className="text-xl font-semibold text-gray-900 mb-4">Uploaded Documents</h2>
 
       {/* Search and filter */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-col md:flex-row gap-2 mb-4">
         <input
           type="text"
           placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
+          className="border px-3 py-2 rounded w-full md:w-1/2"
         />
-        <label htmlFor="fileType">File Type</label>
-        <select
-          id="fileType"
-          name="fileType"
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="all">All</option>
-          <option value="image">Image</option>
-          <option value="pdf">PDF</option>
-          <option value="doc">Word</option>
-          <option value="spreadsheet">Spreadsheet</option>
-        </select>
+        <div className="flex items-center gap-2">
+          <label htmlFor="fileType" className="text-sm font-medium text-gray-700">File Type</label>
+          <select
+            id="fileType"
+            name="fileType"
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="border px-3 py-2 rounded"
+          >
+            <option value="all">All</option>
+            <option value="image">Image</option>
+            <option value="pdf">PDF</option>
+            <option value="doc">Word</option>
+            <option value="spreadsheet">Spreadsheet</option>
+          </select>
+        </div>
       </div>
 
-      {/* Document Table */}
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-gray-100">
-          <tr>
-            {['name', 'type', 'date'].map(col => (
-              <th
-                key={col}
-                onClick={() => handleSortChange(col as any)}
-                className="px-4 py-2 text-left cursor-pointer"
-              >
-                {col.charAt(0).toUpperCase() + col.slice(1)}
-                {sortBy === col && ` ${sortDirection === 'asc' ? '↑' : '↓'}`}
-              </th>
-            ))}
-            <th className="px-4 py-2">Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredDocuments.map((doc, i) => (
-            <tr key={i} className="border-t">
-              <td className="px-4 py-2 flex items-center gap-2">
-                {getFileTypeIcon(doc.name)}
-                {doc.name}
-              </td>
-              <td className="px-4 py-2 capitalize">{doc.type || 'N/A'}</td>
-              <td className="px-4 py-2">
-                {doc.uploadedAt
-                  ? new Date(doc.uploadedAt).toLocaleString()
-                  : 'Unknown'}
-              </td>
-              <td className="px-4 py-2 flex items-center gap-3 md:gap-4">
-                <a
-                  href={doc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
+      {/* Scrollable table container */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              {['name', 'type', 'date'].map(col => (
+                <th
+                  key={col}
+                  onClick={() => handleSortChange(col as any)}
+                  className="px-4 py-2 text-left cursor-pointer whitespace-nowrap"
                 >
-                  View
-                </a>
-                <button
-                  onClick={() => handleDownload(doc)}
-                  className="text-green-600 hover:underline flex items-center gap-1"
-                >
-                  <Download className="w-4 h-4" /> Download
-                </button>
-                <button
-                  onClick={() => handleDelete(doc.name)}
-                  className="text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-
-              </td>
+                  {col.charAt(0).toUpperCase() + col.slice(1)}
+                  {sortBy === col && ` ${sortDirection === 'asc' ? '↑' : '↓'}`}
+                </th>
+              ))}
+              <th className="px-4 py-2">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {filteredDocuments.map((doc, i) => (
+              <tr key={i} className="border-t hover:bg-gray-50">
+                <td className="px-4 py-2 flex items-center gap-2">
+                  {getFileTypeIcon(doc.name)}
+                  <span className="truncate max-w-[150px]">{doc.name}</span>
+                </td>
+                <td className="px-4 py-2 capitalize">{doc.type || 'N/A'}</td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  {doc.uploadedAt
+                    ? new Date(doc.uploadedAt).toLocaleString()
+                    : 'Unknown'}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      View
+                    </a>
+                    <button
+                      onClick={() => handleDownload(doc)}
+                      className="text-green-600 hover:underline flex items-center gap-1"
+                    >
+                      <Download className="w-4 h-4" /> Download
+                    </button>
+                    <button
+                      onClick={() => handleDelete(doc.name)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* No docs fallback */}
       {filteredDocuments.length === 0 && (
         <p className="text-center text-gray-500 mt-4">No documents found.</p>
       )}
     </div>
+
   );
 }

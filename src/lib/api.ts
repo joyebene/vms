@@ -2034,14 +2034,9 @@ export const newVisitorAPI = {
 
 
 export const trainingAPI = {
-  getAllTrainings: async (token: string | null) => {
+  getAllTrainings: async () => {
     try {
-      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/trainings`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/trainings`);
       const data = await response.json();
       // console.log(data);
       return data
@@ -2103,7 +2098,7 @@ export const trainingAPI = {
     }
   },
 
-  deleteTraining: async (trainingId: string, token: string): Promise<{ message: string }> => {
+  deleteTraining: async (trainingId: string, token: string | null): Promise<{ message: string }> => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/${trainingId}`, {
         method: 'DELETE',

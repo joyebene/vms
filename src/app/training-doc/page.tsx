@@ -16,22 +16,20 @@ export default function TrainingPage() {
   const [signedBooks, setSignedBooks] = useState<string[]>([]);
 
 
-  const { token } = useAuth();
-
   useEffect(() => {
     const fetchTrainings = async () => {
       try {
-        const response = await trainingAPI.getAllTrainings(token);
+        const response = await trainingAPI.getAllTrainings();
+        console.log(response);
+        
         setTrainings(response);
       } catch (error) {
         console.error('Failed to fetch training content:', error);
       }
     };
 
-    if (token) {
       fetchTrainings();
-    }
-  }, [token]);
+  }, [])
 
   const handleOptionChange = (trainingIndex: number, questionIndex: number, selectedOption: string) => {
     setSelectedAnswers((prev) => ({
@@ -148,7 +146,7 @@ export default function TrainingPage() {
                           📥 Download Book
                         </a>
 
-                        <button onClick={() => handleSignBook(book.name)} className="text-purple-600 hover:underline">
+                        <button type="button" onClick={() => handleSignBook(book.name)} className="text-purple-600 hover:underline">
                           ✍️ Sign Book
                         </button>
                       </div>

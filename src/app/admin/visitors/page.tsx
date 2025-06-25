@@ -142,17 +142,6 @@ export default function VisitorsPage() {
     }
   }, [successMessage]);
 
-  // const fetchDepartments = async () => {
-  //   if (!token) return;
-
-  //   try {
-  //     const departmentData = await siteAPI.getAllDepartments(token);
-  //     setDepartments(departmentData);
-  //   } catch (err) {
-  //     console.error('Error fetching departments:', err);
-  //   }
-  // };
-
   const handleApproveVisitor = async (visitorId: string, approved: boolean, type: string = 'visitor') => {
     if (!token) return;
 
@@ -320,14 +309,6 @@ export default function VisitorsPage() {
     });
   };
 
-  // const formatTime = (dateString?: string) => {
-  //   if (!dateString) return '—';
-  //   const date = new Date(dateString);
-  //   return date.toLocaleTimeString('en-US', {
-  //     hour: '2-digit',
-  //     minute: '2-digit',
-  //   });
-  // };
 
   if (!user) {
     return null; // AppBar will handle unauthorized access
@@ -601,7 +582,7 @@ export default function VisitorsPage() {
                                   )}
                                 </button>
                                 <button
-                                  onClick={() => handleApproveVisitor(visitor._id, false)}
+                                  onClick={() => handleApproveVisitor(visitor._id, false, visitor.visitorCategory)}
                                   disabled={approvingVisitor === visitor._id}
                                   className="text-red-600 hover:text-red-900 disabled:text-red-300 disabled:cursor-not-allowed"
                                   aria-label={`Reject ${visitor.firstName} ${visitor.lastName}`}
@@ -776,7 +757,7 @@ export default function VisitorsPage() {
                             {/* Approval buttons for pending visitors */}
                             {visitor.status === 'pending' && (user?.role === 'admin' || user?.role === 'manager') && (
                               <>
-                                <button
+                                <button type="button"
                                   onClick={() => handleApproveVisitor(visitor._id, true, visitor.visitorCategory)}
                                   disabled={approvingVisitor === visitor._id}
                                   className="text-green-600 hover:text-green-900 disabled:text-green-300 disabled:cursor-not-allowed"
@@ -788,8 +769,8 @@ export default function VisitorsPage() {
                                     <Check className="h-4 w-4" aria-hidden="true" />
                                   )}
                                 </button>
-                                <button
-                                  onClick={() => handleApproveVisitor(visitor._id, false)}
+                                <button type="button"
+                                  onClick={() => handleApproveVisitor(visitor._id, false, visitor.visitorCategory)}
                                   disabled={approvingVisitor === visitor._id}
                                   className="text-red-600 hover:text-red-900 disabled:text-red-300 disabled:cursor-not-allowed"
                                   aria-label={`Reject ${visitor.firstName} ${visitor.lastName}`}
@@ -937,7 +918,7 @@ export default function VisitorsPage() {
                               )}
                             </button>
                             <button type='button'
-                              onClick={() => handleApproveVisitor(visitor._id, false)}
+                              onClick={() => handleApproveVisitor(visitor._id, false, visitorCategory)}
                               disabled={approvingVisitor === visitor._id}
                               className="text-red-600 hover:text-red-900 disabled:text-red-300 disabled:cursor-not-allowed flex items-center"
                               aria-label={`Reject ${visitor.firstName} ${visitor.lastName}`}
