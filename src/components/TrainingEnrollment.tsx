@@ -21,7 +21,7 @@ export default function TrainingEnrollment({ visitorId, onEnrollmentSuccess }: T
 
   useEffect(() => {
     fetchTrainings();
-  }, [token]);
+  }, []);
 
   const fetchTrainings = async () => {
     if (!token) return;
@@ -30,7 +30,7 @@ export default function TrainingEnrollment({ visitorId, onEnrollmentSuccess }: T
     setError(null);
 
     try {
-      const trainingData = await trainingAPI.getAllTrainings(token);
+      const trainingData = await trainingAPI.getAllTrainings();
 
       // Filter only if trainingData is an array
       const activeTrainings = Array.isArray(trainingData)
