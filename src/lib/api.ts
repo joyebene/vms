@@ -1725,13 +1725,8 @@ export const analyticsAPI = {
 export const newVisitorAPI = {
 
   // fetch all visitor
-  getAll: async (token: string | null) => {
-    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  getAll: async () => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors`);
 
     if (!res.ok) {
       const error = await res.json();
