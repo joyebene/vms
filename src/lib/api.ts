@@ -231,8 +231,14 @@ export const authAPI = {
         },
         body: JSON.stringify({ refreshToken }),
       });
+      const data = await response.json();
 
-      return handleResponse(response);
+
+      if (!response.ok) {
+        console.error('Refresh token failed with response:', data);
+        throw new Error(data.message || 'Token refresh failed');
+      }
+      return data;
     } catch (error) {
       console.error('Token refresh error:', error);
       throw error;
@@ -1500,7 +1506,7 @@ export const adminAPI = {
         },
       });
       const data = await response.json();
-    
+
       return data;
     } catch (error) {
       console.error('Get user by ID error:', error);
