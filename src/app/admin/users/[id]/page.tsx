@@ -1,30 +1,69 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
-import { adminAPI, SignupData } from '@/lib/api';
-import { ArrowLeft, User, Mail, Phone, Building, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { adminAPI } from '@/lib/api';
+import { ArrowLeft, User, Mail, Phone, Building, AlertCircle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
-export default function AddUserPage() {
-  const [formData, setFormData] = useState<SignupData>({
+interface EditData {
+    firstName: string;
+    lastName: string;
+    email: string;
+    department: string
+    phoneNumber: string;
+    role: 'admin' | 'security' | 'staff' | 'manager' | 'trainer' | 'host';
+}
+
+export default function EditUserPage() {
+  const [formData, setFormData] = useState<EditData>({
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
-    confirmPassword: '',
     department: '',
     phoneNumber: '',
     role: 'staff',
   });
   
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const params = useParams();
+  const userId = params?.id as string
+  
   
   const { token } = useAuth();
   const router = useRouter();
+
+
+useEffect(() => {
+  const fetchUser = async () => {
+    if (!token || !userId) return;
+
+    try {
+      const user = await adminAPI.getUserById(userId, token);
+      
+      setFormData({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        department: user.department,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+      });
+    } catch (err) {
+      console.error('Failed to fetch user:', err);
+      setError('Failed to fetch user data');
+    }
+  };
+
+  fetchUser();
+}, [token, userId]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -43,15 +82,11 @@ export default function AddUserPage() {
     }
 
     // Validate form
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.department || !formData.phoneNumber || !formData.role) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.department || !formData.phoneNumber || !formData.role) {
       setError('Please fill in all required fields');
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
 
     setIsSubmitting(true);
     setError(null);
@@ -59,17 +94,15 @@ export default function AddUserPage() {
 
     try {
       // Create a new user
-      await adminAPI.createUser(formData, token);
+      await adminAPI.updateUser(userId, formData, token);
 
-      setSuccessMessage('User created successfully');
+      setSuccessMessage('User edited successfully');
       
       // Reset form
       setFormData({
         firstName: '',
         lastName: '',
         email: '',
-        password: '',
-        confirmPassword: '',
         department: '',
         phoneNumber: '',
         role: 'staff',
@@ -80,8 +113,8 @@ export default function AddUserPage() {
         router.push('/admin/users');
       }, 1500);
     } catch (err) {
-      console.error('Error creating user:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create user');
+      console.error('Error editing user:', err);
+      setError(err instanceof Error ? err.message : 'Failed to edit user');
     } finally {
       setIsSubmitting(false);
     }
@@ -95,9 +128,9 @@ export default function AddUserPage() {
             <ArrowLeft className="h-5 w-5 text-gray-500" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Add New User</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Edit User</h1>
             <p className="mt-2 text-gray-600">
-              Create a new user account in the system.
+              Edit user account in the system.
             </p>
           </div>
         </div>
@@ -187,48 +220,6 @@ export default function AddUserPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number <span className="text-red-500">*</span>
               </label>
@@ -302,7 +293,7 @@ export default function AddUserPage() {
               disabled={isSubmitting}
               className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
             >
-              {isSubmitting ? 'Creating...' : 'Create User'}
+              {isSubmitting ? 'Editing...' : 'Edit User'}
             </button>
           </div>
         </form>

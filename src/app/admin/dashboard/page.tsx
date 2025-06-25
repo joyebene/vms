@@ -8,7 +8,7 @@ import {
   Users, Calendar, Clock, BarChart2, ArrowUp, FileText, BookOpen
 } from 'lucide-react';
 
-import { visitorAPI, analyticsAPI, newVisitorAPI, VisitorForm } from '@/lib/api';
+import { analyticsAPI, newVisitorAPI, VisitorForm } from '@/lib/api';
 import AnalyticsDashboard from '@/components/charts/AnalyticsDashboard';
 
 export default function AdminDashboard() {
@@ -28,10 +28,12 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const { user, token } = useAuth();
 
+  
+
   const fetchVisitors = async () => {
     setIsLoading(true);
     try {
-      const visitorData: VisitorForm[] = await newVisitorAPI.getAll();
+      const visitorData: VisitorForm[] = await newVisitorAPI.getAll(token);
       const scheduleVisitData = await newVisitorAPI.getAllSchedule();
       const visitors = visitorData.filter(v => v.visitorCategory === "visitor")
       setFilteredVisitors(visitors);
@@ -54,79 +56,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchVisitorStats = useCallback(async () => {
-    if (!token) return;
-    setIsLoading(true);
-
-    try {
-      try {
-        const stats = await analyticsAPI.getVisitorStats(token);
-        setVisitorStats({
-          total: stats.total,
-          checkedIn: stats.checkedIn,
-          checkedOut: stats.checkedOut,
-          scheduled: stats.scheduled,
-          pending: stats.pending || 0,
-          approved: stats.approved || 0,
-        });
-        return;
-      } catch (analyticsError) {
-        console.error('Analytics API error:', analyticsError);
-      }
-
-      try {
-        const visitors = await visitorAPI.getVisitorsByHost(token);
-        if (Array.isArray(visitors) && visitors.length > 0) {
-          const total = visitors.length;
-          const pending = visitors.filter(v => v.status === 'pending').length;
-          const approved = visitors.filter(v => v.status === 'approved').length;
-          const checkedIn = visitors.filter(v => v.status === 'checked-in').length;
-          const checkedOut = visitors.filter(v => v.status === 'checked-out').length;
-          const scheduled = approved;
-
-          setVisitorStats({
-            total,
-            checkedIn,
-            checkedOut,
-            scheduled,
-            pending,
-            approved,
-          });
-          return;
-        }
-      } catch (visitorError) {
-        console.error('Visitor fallback error:', visitorError);
-      }
-
-      setVisitorStats({
-        total: 0,
-        checkedIn: 0,
-        checkedOut: 0,
-        scheduled: 0,
-        pending: 0,
-        approved: 0,
-      });
-    } catch (error) {
-      console.error('Error fetching visitor stats:', error);
-      setVisitorStats({
-        total: 0,
-        checkedIn: 0,
-        checkedOut: 0,
-        scheduled: 0,
-        pending: 0,
-        approved: 0,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
 
   useEffect(() => {
     if (token) {
-      fetchVisitorStats();
+      // fetchVisitorStats();
       fetchVisitors();
     }
-  }, [token, fetchVisitorStats]);
+  }, [token]);
 
   if (!user) return null;
 

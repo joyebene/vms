@@ -23,6 +23,17 @@ interface DateRange {
   endDate: string;
 }
 
+interface VisitMetrics {
+  visitorsByDay: {
+    date: string;
+    count: number;
+  }[];
+  visitorsByPurpose: {
+    label: string;
+    value: number;
+  }[];
+}
+
 interface VisitorMetrics {
   totalVisitors: number;
   checkedIn: number;
@@ -56,6 +67,7 @@ interface AccessMetrics {
 export default function AnalyticsDashboard({ refreshInterval = 60000 }: AnalyticsDashboardProps) {
   const { token } = useAuth();
   const [visitorMetrics, setVisitorMetrics] = useState<VisitorMetrics | null>(null);
+  const [visitMetrics, setVisitMetrics] = useState<VisitMetrics | null>(null);
   const [accessMetrics, setAccessMetrics] = useState<AccessMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,24 +86,27 @@ export default function AnalyticsDashboard({ refreshInterval = 60000 }: Analytic
       setIsRefreshing(true);
 
       // Fetch visitor and access metrics in parallel
-      const [visitorData, accessData] = await Promise.all([
+      const [visitorData, accessData, visitMetric] = await Promise.all([
         analyticsAPI.getVisitorStats(token),
         analyticsAPI.getAccessMetrics(token),
+        analyticsAPI.getVisitorMetrics(token)
       ]);
 
+      console.log(accessData);
       // Transform visitor data to match interface
       const transformedVisitorData: VisitorMetrics = {
-        totalVisitors: visitorData.total,
-        checkedIn: visitorData.checkedIn,
-        checkedOut: visitorData.checkedOut,
-        scheduled: visitorData.scheduled,
+        totalVisitors: visitorData.visitor?.total + visitorData.contractor?.total,
+        checkedIn: visitorData.visitor?.checkedIn + visitorData.contractor?.checkedIn,
+        checkedOut: visitorData.visitor?.checkedOut + visitorData.contractor.checkedOut,
+        scheduled: visitorData.visitor?.scheduled + visitorData.contractor?.scheduled,
         cancelled: 0, // Default value
         visitorsByDay: [], // Default empty array
         visitorsByPurpose: [] // Default empty array
       };
-
+      
       setVisitorMetrics(transformedVisitorData);
       setAccessMetrics(accessData as AccessMetrics);
+      setVisitMetrics(visitMetric)
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
@@ -130,6 +145,9 @@ export default function AnalyticsDashboard({ refreshInterval = 60000 }: Analytic
   const handleRefresh = () => {
     fetchAnalyticsData();
   };
+
+ 
+  
 
   return (
     <div className="space-y-6">
@@ -222,20 +240,20 @@ export default function AnalyticsDashboard({ refreshInterval = 60000 }: Analytic
                 <div className="space-y-6">
                   {/* Visitor Stats */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-blue-50 p-4 rounded-lg text-center">
-                      <p className="text-sm font-medium text-blue-800">Total</p>
+                    <div className="bg-blue-50 p-2 sm:p-4 rounded-lg text-center">
+                      <p className="text-[12px] sm:text-sm font-medium text-blue-800">Total</p>
                       <p className="text-2xl font-bold">{visitorMetrics.totalVisitors}</p>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg text-center">
-                      <p className="text-sm font-medium text-green-800">Checked In</p>
+                    <div className="bg-green-50 p-2 sm:p-4 rounded-lg text-center">
+                      <p className="text-[12px] sm:text-sm font-medium text-green-800">Checked In</p>
                       <p className="text-2xl font-bold">{visitorMetrics.checkedIn}</p>
                     </div>
-                    <div className="bg-purple-50 p-4 rounded-lg text-center">
-                      <p className="text-sm font-medium text-purple-800">Checked Out</p>
+                    <div className="bg-purple-50 p-2 sm:p-4 rounded-lg text-center">
+                      <p className="text-[12px] sm:text-sm font-medium text-purple-800">Checked Out</p>
                       <p className="text-2xl font-bold">{visitorMetrics.checkedOut}</p>
                     </div>
-                    <div className="bg-yellow-50 p-4 rounded-lg text-center">
-                      <p className="text-sm font-medium text-yellow-800">Scheduled</p>
+                    <div className="bg-yellow-50 p-2 sm:p-4 rounded-lg text-center">
+                      <p className="text-[12px] sm:text-sm font-medium text-yellow-800">Scheduled</p>
                       <p className="text-2xl font-bold">{visitorMetrics.scheduled}</p>
                     </div>
                   </div>
@@ -245,9 +263,9 @@ export default function AnalyticsDashboard({ refreshInterval = 60000 }: Analytic
                     <div>
                       <h4 className="text-md font-semibold mb-2">Visitors by Day</h4>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        {visitorMetrics.visitorsByDay && visitorMetrics.visitorsByDay.length > 0 ? (
+                        {visitMetrics?.visitorsByDay && visitMetrics.visitorsByDay.length > 0 ? (
                           <VisitorChart
-                            data={visitorMetrics}
+                            data={visitMetrics?.visitorsByDay}
                             type="bar"
                             title="Visitor Trends"
                             height={300}
@@ -264,9 +282,9 @@ export default function AnalyticsDashboard({ refreshInterval = 60000 }: Analytic
                     <div>
                       <h4 className="text-md font-semibold mb-2">Visitors by Purpose</h4>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        {visitorMetrics.visitorsByPurpose && visitorMetrics.visitorsByPurpose.length > 0 ? (
+                        {visitMetrics?.visitorsByPurpose && visitMetrics.visitorsByPurpose.length > 0 ? (
                           <VisitorChart
-                            data={visitorMetrics}
+                            data={visitMetrics?.visitorsByPurpose}
                             type="pie"
                             title="Visit Purposes"
                             height={300}
@@ -303,16 +321,16 @@ export default function AnalyticsDashboard({ refreshInterval = 60000 }: Analytic
                 <div className="space-y-6">
                   {/* Access Stats */}
                   <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="bg-indigo-50 p-4 rounded-lg text-center">
-                      <p className="text-sm font-medium text-indigo-800">Total</p>
+                    <div className="bg-indigo-50 p-2 sm:p-4 rounded-lg text-center">
+                      <p className="text-[12px] sm:text-sm font-medium text-indigo-800">Total</p>
                       <p className="text-2xl font-bold">{accessMetrics.totalAccesses}</p>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg text-center">
-                      <p className="text-sm font-medium text-green-800">Successful</p>
+                    <div className="bg-green-50 p-2 sm:p-4 rounded-lg text-center">
+                      <p className="text-[12px] sm:text-sm font-medium text-green-800">Successful</p>
                       <p className="text-2xl font-bold">{accessMetrics.successfulAccesses}</p>
                     </div>
-                    <div className="bg-red-50 p-4 rounded-lg text-center">
-                      <p className="text-sm font-medium text-red-800">Denied</p>
+                    <div className="bg-red-50 p-2 sm:p-4 rounded-lg text-center">
+                      <p className="text-[12px] sm:text-sm font-medium text-red-800">Denied</p>
                       <p className="text-2xl font-bold">{accessMetrics.deniedAccesses}</p>
                     </div>
                   </div>

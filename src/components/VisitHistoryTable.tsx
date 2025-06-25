@@ -1,17 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { newVisitorAPI, VisitorForm } from '@/lib/api'
+import { newVisitorAPI, VisitorForm } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function VisitorsPage() {
   const [visitorHistory, setVisitorHistory] = useState<VisitorForm[]>([])
   const [contractorHistory, setContractorHistory] = useState<VisitorForm[]>([])
   const [loading, setLoading] = useState(true)
+    const { token } = useAuth();
+  
 
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const data: VisitorForm[] = await newVisitorAPI.getAll()
+        const data: VisitorForm[] = await newVisitorAPI.getAll(token)
         const visitor = data.filter(v => v.visitorCategory === "visitor")
         const contractor = data.filter(v => v.visitorCategory === "contractor")
         setVisitorHistory(visitor)

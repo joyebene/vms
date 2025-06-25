@@ -118,7 +118,7 @@ export interface VisitorForm {
   hostEmployee: string;
   company?: string;
   siteLocation?: string;
-  department: string; 
+  department: string;
   meetingLocation: string;
   checkInTime?: string;
   checkOutTime?: string;
@@ -133,8 +133,8 @@ export interface VisitorForm {
   approvedAt?: string;
   notificationSent?: boolean;
   approvalNotificationSent?: boolean;
-  createdAt? : string | null;
-   hazards?: {
+  createdAt?: string | null;
+  hazards?: {
     title: string;
     risk: string | number;
     selectedControls: string[];
@@ -151,7 +151,7 @@ export interface VisitorForm {
     "DUST MASK": 'N' | 'Y';
     "FALL ARREST": 'N' | 'Y';
   };
-    documents: DocumentItem[];
+  documents: DocumentItem[];
 }
 
 export interface ApiResponse<T> {
@@ -166,7 +166,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
   console.log("API Response", data)
 
   if (!response.ok) {
-    const errorMessage = data.message || 'An error occurred';
+    const errorMessage = data.error || 'An error occurred';
 
     // Check for token expiration (401 Unauthorized)
     if (response.status === 401) {
@@ -190,7 +190,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 export const authAPI = {
   login: async (credentials: LoginCredentials): Promise<{ userId: string; email: string; firstName: string; lastName: string; role: string; accessToken: string; refreshToken: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ export const authAPI = {
 
   signup: async (userData: SignupData): Promise<{ userId: string; email: string; firstName: string; lastName: string; role: string; accessToken: string; refreshToken: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -224,7 +224,7 @@ export const authAPI = {
 
   refreshToken: async (refreshToken: string): Promise<{ accessToken: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/auth/refresh-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -241,7 +241,7 @@ export const authAPI = {
 
   getProfile: async (token: string): Promise<User> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/auth/profile`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -257,7 +257,7 @@ export const authAPI = {
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -274,7 +274,7 @@ export const authAPI = {
 
   resetPassword: async (resetToken: string, newPassword: string): Promise<{ message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -291,7 +291,7 @@ export const authAPI = {
 
   changePassword: async (currentPassword: string, newPassword: string, token: string): Promise<{ message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1255,7 +1255,7 @@ export const employeeAPI = {
     try {
       // Since there's no dedicated /employees endpoint in the API,
       // we'll use the admin/users endpoint and filter for hosts
-      const response = await fetch(`${API_BASE_URL}/admin/users?role=host`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/users?role=host`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1280,7 +1280,7 @@ export const employeeAPI = {
         // If admin/users fails, try the regular users endpoint
         try {
           console.warn('Admin users endpoint failed, trying regular users endpoint');
-          const usersResponse = await fetch(`${API_BASE_URL}/users`, {
+          const usersResponse = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/users`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -1306,7 +1306,7 @@ export const employeeAPI = {
           // If all else fails, try to get the current user's profile
           // This is a last resort and won't give a list of hosts, but at least provides one valid user
           try {
-            const profileResponse = await fetch(`${API_BASE_URL}/auth/profile`, {
+            const profileResponse = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/auth/profile`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -1356,7 +1356,7 @@ export const employeeAPI = {
 
       // First try to get the user from the admin API
       try {
-        const response = await fetch(`${API_BASE_URL}/admin/users/${employeeId}`, {
+        const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/users/${employeeId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -1444,7 +1444,7 @@ export const adminAPI = {
   // Get all users
   getUsers: async (token: string, role?: string, department?: string, isActive?: boolean, search?: string): Promise<User[]> => {
     try {
-      let url = `${API_BASE_URL}/admin/users`;
+      let url = `${NEXT_PUBLIC_API_BASE_URL}/admin/users`;
       const params = new URLSearchParams();
 
       if (role) params.append('role', role);
@@ -1463,7 +1463,8 @@ export const adminAPI = {
         },
       });
 
-      return handleResponse(response);
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Get users error:', error);
       throw error;
@@ -1473,7 +1474,7 @@ export const adminAPI = {
   // Create user
   createUser: async (userData: SignupData, token: string): Promise<User> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1490,16 +1491,17 @@ export const adminAPI = {
   },
 
   // Get user by ID
-  getUserById: async (userId: string, token: string): Promise<User> => {
+  getUserById: async (userId: string, token: string | null): Promise<User> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/users/${userId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-
-      return handleResponse(response);
+      const data = await response.json();
+    
+      return data;
     } catch (error) {
       console.error('Get user by ID error:', error);
       throw error;
@@ -1509,7 +1511,7 @@ export const adminAPI = {
   // Update user
   updateUser: async (userId: string, userData: Partial<User>, token: string): Promise<User> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1528,7 +1530,7 @@ export const adminAPI = {
   // Delete user
   deleteUser: async (userId: string, token: string): Promise<{ message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1545,7 +1547,7 @@ export const adminAPI = {
   // Get system settings
   getSystemSettings: async (token: string): Promise<SystemSettings> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/settings`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/settings`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1562,7 +1564,7 @@ export const adminAPI = {
   // Update system settings
   updateSystemSettings: async (settings: SystemSettings, token: string): Promise<{ message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/settings`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1581,7 +1583,7 @@ export const adminAPI = {
   // Get audit logs
   getAuditLogs: async (token: string, startDate?: string, endDate?: string, userId?: string, action?: string): Promise<AuditLog[]> => {
     try {
-      let url = `${API_BASE_URL}/admin/audit-logs`;
+      let url = `${NEXT_PUBLIC_API_BASE_URL}/admin/audit-logs`;
       const params = new URLSearchParams();
 
       if (startDate) params.append('startDate', startDate);
@@ -1610,7 +1612,7 @@ export const adminAPI = {
   // Get licenses
   getLicenses: async (token: string): Promise<License[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/licenses`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/licenses`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1627,7 +1629,7 @@ export const adminAPI = {
   // Add license
   addLicense: async (licenseKey: string, expiryDate: string, token: string): Promise<License> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/licenses`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/licenses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1646,16 +1648,18 @@ export const adminAPI = {
 
 // Analytics API
 export const analyticsAPI = {
-  getVisitorStats: async (token: string): Promise<{ total: number; checkedIn: number; checkedOut: number; scheduled: number; pending?: number; approved?: number }> => {
+  getVisitorStats: async (token: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/visitors`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/analytics/visitors`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
+      const data = await response.json(); // ✅ This gives you the actual { visitor, contractor } object
+      console.log("Response data:", data);
 
-      return handleResponse(response);
+      return data;
     } catch (error) {
       console.error('Get visitor stats error:', error);
       throw error;
@@ -1664,23 +1668,42 @@ export const analyticsAPI = {
 
   getAccessMetrics: async (token: string): Promise<any> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/access`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/analytics/access`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-
-      return handleResponse(response);
+      const data = await response.json();
+      return data
+      // return handleResponse(response);
     } catch (error) {
       console.error('Get access metrics error:', error);
       throw error;
     }
   },
 
+  getVisitorMetrics: async (token: string): Promise<any> => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/analytics/visitor-metrics`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+
+      return data
+      // return handleResponse(response);
+    } catch (error) {
+      console.error('Get visitor metrics error:', error);
+      throw error;
+    }
+  },
+
   getTrainingMetrics: async (token: string): Promise<any> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/training`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/analytics/training`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1702,8 +1725,13 @@ export const analyticsAPI = {
 export const newVisitorAPI = {
 
   // fetch all visitor
-  getAll: async () => {
-    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors`);
+  getAll: async (token: string | null) => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
     if (!res.ok) {
       const error = await res.json();
@@ -1714,25 +1742,53 @@ export const newVisitorAPI = {
   },
 
   searchByEmail: async (email: string) => {
-  try {
-    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/email-lookup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
+    try {
+      const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/email-lookup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
 
-    const data = await res.json();
-    if (res.ok) { 
-      console.log('Found:', data);
-      return data.data;
-      // fill form with data.data (visitor or contractor)
-    } else {
-      console.warn('Not found');
+      const data = await res.json();
+      if (res.ok) {
+        console.log('Found:', data);
+        return data.data;
+        // fill form with data.data (visitor or contractor)
+      } else {
+        console.warn('Not found');
+      }
+    } catch (err) {
+      console.error('Error searching:', err);
     }
-  } catch (err) {
-    console.error('Error searching:', err);
-  }
-},
+  },
+
+  getVisitorsByHost: async (token: string, status?: string, startDate?: string, endDate?: string): Promise<Visitor[]> => {
+    try {
+      let url = `${NEXT_PUBLIC_API_BASE_URL}/admin/visitors/host`;
+      const params = new URLSearchParams();
+
+      if (status) params.append('status', status);
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get visitors by host error:', error);
+      throw error;
+    }
+  },
 
 
   // fetch single visitor
@@ -1795,7 +1851,7 @@ export const newVisitorAPI = {
     return await response.json(); // { message, doc }
   },
 
-   checkInVisitor: async (visitorId: string, token: string): Promise<Visitor> => {
+  checkInVisitor: async (visitorId: string, token: string): Promise<Visitor> => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors/${visitorId}/check-in`, {
         method: 'POST',
@@ -1866,13 +1922,13 @@ export const newVisitorAPI = {
         body: JSON.stringify({ qrData }),
       });
 
-       if (!response.ok) {
+      if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'QR code validation failed');
       }
 
       return await response.json();
-      
+
     } catch (error) {
       console.error('Validate QR code error:', error);
       throw error;
@@ -1885,7 +1941,7 @@ export const newVisitorAPI = {
         method: 'GET',
       });
 
-       if (!response.ok) {
+      if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'QR code validation failed');
       }
@@ -1898,11 +1954,11 @@ export const newVisitorAPI = {
   },
 
   // /lib/api.ts
-getVisitorByEmail: async (email: string): Promise<string> => {
-  const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/visitors/email/${email}`);
-  if (!res.ok) throw new Error("Visitor not found");
-  return res.json(); // Should return visitor object
-},
+  getVisitorByEmail: async (email: string): Promise<string> => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/visitors/email/${email}`);
+    if (!res.ok) throw new Error("Visitor not found");
+    return res.json(); // Should return visitor object
+  },
 
 
 
@@ -1956,7 +2012,7 @@ getVisitorByEmail: async (email: string): Promise<string> => {
       throw error;
     }
   },
-   addDocument: async (visitorId: string, document: any) => {
+  addDocument: async (visitorId: string, document: any) => {
     const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/visitors/${visitorId}/documents`, {
       method: 'POST',
       headers: {

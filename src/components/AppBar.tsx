@@ -17,7 +17,8 @@ import {
   FileText,
   BookOpen,
   LayoutDashboard,
-  QrCode
+  QrCode,
+  Users
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -245,6 +246,16 @@ const handleLanguageChange = async (lang: string) => {
                                 </div>
                               </Link>
                               <Link
+                                href="/admin/users"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setUserMenuOpen(false)}
+                              >
+                                <div className="flex items-center">
+                                  <Users className="mr-2 h-4 w-4" />
+                                  Users
+                                </div>
+                              </Link>
+                              <Link
                                 href="/admin/settings"
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 onClick={() => setUserMenuOpen(false)}
@@ -448,6 +459,16 @@ const handleLanguageChange = async (lang: string) => {
                         <div className="flex items-center">
                           <BarChart2 className="mr-2 h-5 w-5" />
                           Analytics
+                        </div>
+                      </Link>
+                      <Link
+                        href="/admin/users"
+                        className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <div className="flex items-center">
+                          <Users className="mr-2 h-5 w-5" />
+                          Users
                         </div>
                       </Link>
                       <Link

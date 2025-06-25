@@ -373,9 +373,9 @@ function VisitorInfo({ visitor }: { visitor: VisitorForm }) {
             <div>
               <p className="text-sm text-gray-500">Training</p>
               <p className="font-medium">
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                ${visitor.trainingCompleted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                  {visitor.trainingCompleted ? 'Completed' : 'Required'}
+                <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+               bg-yellow-100 text-yellow-800'>
+                Completed
                 </span>
               </p>
             </div>

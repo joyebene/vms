@@ -141,9 +141,13 @@ export default function TrainingPage() {
                         <a href={book.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                           📖 Read Book
                         </a>
-                        <a href={book.url} download className="text-green-600 hover:underline">
+                        <a
+                          href={book.url.replace('/upload/', `/upload/fl_attachment:${encodeURIComponent(book.name)}/`)}
+                          className="text-green-600 hover:underline"
+                        >
                           📥 Download Book
                         </a>
+
                         <button onClick={() => handleSignBook(book.name)} className="text-purple-600 hover:underline">
                           ✍️ Sign Book
                         </button>

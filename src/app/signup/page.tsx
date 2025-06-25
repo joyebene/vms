@@ -41,7 +41,7 @@ export default function SignupPage() {
     }
 
     try {
-      await signup({
+     await signup({
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,
@@ -50,7 +50,7 @@ export default function SignupPage() {
         phoneNumber: form.phoneNumber,
         role: form.role
       });
-      router.push('/admin/dashboard'); // Redirect to dashboard after signup
+      router.push('/login'); // Redirect to dashboard after signup
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Signup failed. Please try again.');
     } finally {
