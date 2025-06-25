@@ -33,7 +33,7 @@ export default function AdminDashboard() {
   const fetchVisitors = async () => {
     setIsLoading(true);
     try {
-      const visitorData: VisitorForm[] = await newVisitorAPI.getAll(token);
+      const visitorData: VisitorForm[] = await newVisitorAPI.getAll();
       const scheduleVisitData = await newVisitorAPI.getAllSchedule();
       const visitors = visitorData.filter(v => v.visitorCategory === "visitor")
       setFilteredVisitors(visitors);
