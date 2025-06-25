@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { newVisitorAPI, VisitorForm } from '@/lib/api';
-import { useAuth } from '@/lib/AuthContext';
+
 
 export default function VisitorsPage() {
   const [visitorHistory, setVisitorHistory] = useState<VisitorForm[]>([])
