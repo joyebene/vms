@@ -8,13 +8,13 @@ export default function VisitorsPage() {
   const [visitorHistory, setVisitorHistory] = useState<VisitorForm[]>([])
   const [contractorHistory, setContractorHistory] = useState<VisitorForm[]>([])
   const [loading, setLoading] = useState(true)
-    const { token } = useAuth();
+
   
 
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const data: VisitorForm[] = await newVisitorAPI.getAll(token)
+        const data: VisitorForm[] = await newVisitorAPI.getAll()
         const visitor = data.filter(v => v.visitorCategory === "visitor")
         const contractor = data.filter(v => v.visitorCategory === "contractor")
         setVisitorHistory(visitor)
