@@ -918,7 +918,7 @@ export default function VisitorsPage() {
                               )}
                             </button>
                             <button type='button'
-                              onClick={() => handleApproveVisitor(visitor._id, false, visitorCategory)}
+                              onClick={() => handleApproveVisitor(visitor._id, false, visitor.visitorCategory)}
                               disabled={approvingVisitor === visitor._id}
                               className="text-red-600 hover:text-red-900 disabled:text-red-300 disabled:cursor-not-allowed flex items-center"
                               aria-label={`Reject ${visitor.firstName} ${visitor.lastName}`}
