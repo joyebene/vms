@@ -32,7 +32,15 @@ export default function SystemSettings() {
 
     try {
       const systemSettings = await adminAPI.getSystemSettings(token);
-      setSettings(systemSettings);
+
+      // Ensure all properties are present using fallback/default values
+      setSettings({
+        emailNotificationsEnabled: systemSettings?.emailNotificationsEnabled ?? true,
+        qrCodeExpiryHours: systemSettings?.qrCodeExpiryHours ?? 24,
+        visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
+        trainingRequired: systemSettings?.trainingRequired ?? false,
+        systemVersion: systemSettings?.systemVersion ?? '1.0.0',
+      });
     } catch (err) {
       console.error('Error fetching system settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to load system settings');
@@ -135,9 +143,10 @@ export default function SystemSettings() {
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
+                  placeholder='email notif'
                   type="checkbox"
                   className="sr-only peer"
-                  checked={settings.emailNotificationsEnabled}
+                  checked={settings?.emailNotificationsEnabled}
                   onChange={() => handleToggleSetting('emailNotificationsEnabled')}
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -151,9 +160,10 @@ export default function SystemSettings() {
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
+                  placeholder="checkbox"
                   type="checkbox"
                   className="sr-only peer"
-                  checked={settings.visitorPhotoRequired}
+                  checked={settings?.visitorPhotoRequired}
                   onChange={() => handleToggleSetting('visitorPhotoRequired')}
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -167,9 +177,10 @@ export default function SystemSettings() {
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
+                  placeholder='checkbox'
                   type="checkbox"
                   className="sr-only peer"
-                  checked={settings.trainingRequired}
+                  checked={settings?.trainingRequired}
                   onChange={() => handleToggleSetting('trainingRequired')}
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -191,7 +202,7 @@ export default function SystemSettings() {
                   type="number"
                   min="1"
                   max="168"
-                  value={settings.qrCodeExpiryHours}
+                  value={settings?.qrCodeExpiryHours}
                   onChange={(e) => handleQrCodeExpiryChange(parseInt(e.target.value) || 24)}
                   className="w-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -209,7 +220,7 @@ export default function SystemSettings() {
           <div className="bg-gray-50 p-4 rounded-md">
             <div className="flex items-center text-sm text-gray-500 mb-2">
               <span className="font-medium mr-2">System Version:</span>
-              <span>{settings.systemVersion}</span>
+              <span>{settings?.systemVersion}</span>
             </div>
           </div>
         </div>

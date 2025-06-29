@@ -43,28 +43,28 @@ export default function AppBar({ showAuthButtons = true }: AppBarProps) {
     setUserMenuOpen(false);
   };
 
-const handleLanguageChange = async (lang: string) => {
-  setLanguageOpen(false);
+  const handleLanguageChange = async (lang: string) => {
+    setLanguageOpen(false);
 
-  try {
-    const res = await fetch('/api/language', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ language: lang }),
-    });
+    try {
+      const res = await fetch('/api/language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: lang }),
+      });
 
-    if (!res.ok) throw new Error("Language change failed");
+      if (!res.ok) throw new Error("Language change failed");
 
-    localStorage.setItem('lang', lang);
+      localStorage.setItem('lang', lang);
 
-    // ✅ Delay to ensure cookie is written
-    setTimeout(() => {
-      window.location.reload();
-    }, 200); // even 100ms can work, but 200ms is safer
-  } catch (error) {
-    console.error('Language change failed:', error);
-  }
-};
+      // ✅ Delay to ensure cookie is written
+      setTimeout(() => {
+        window.location.reload();
+      }, 200); // even 100ms can work, but 200ms is safer
+    } catch (error) {
+      console.error('Language change failed:', error);
+    }
+  };
 
 
   return (
@@ -87,11 +87,10 @@ const handleLanguageChange = async (lang: string) => {
             <div className="hidden sm:ml-10 sm:flex sm:space-x-4 lg:space-x-8">
               <Link
                 href="/"
-                className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-md ${
-                  isActive('/')
+                className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-md ${isActive('/')
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
-                }`}
+                  }`}
               >
                 <Home className="mr-1.5 h-4 w-4" />
                 <span>Home</span>
@@ -99,11 +98,10 @@ const handleLanguageChange = async (lang: string) => {
 
               <Link
                 href="/check-in"
-                className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-md ${
-                  isActive('/check-in')
+                className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-md ${isActive('/check-in')
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
-                }`}
+                  }`}
               >
                 <UserPlus className="mr-1.5 h-4 w-4" />
                 <span>New Visitor</span>
@@ -111,11 +109,10 @@ const handleLanguageChange = async (lang: string) => {
 
               <Link
                 href="/been-here-before"
-                className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-md ${
-                  isActive('/been-here-before')
+                className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-md ${isActive('/been-here-before')
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
-                }`}
+                  }`}
               >
                 <User className="mr-1.5 h-4 w-4" />
                 <span>Return Visitor</span>
@@ -123,11 +120,10 @@ const handleLanguageChange = async (lang: string) => {
 
               <Link
                 href="/check-out"
-                className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-md ${
-                  isActive('/check-out')
+                className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-md ${isActive('/check-out')
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
-                }`}
+                  }`}
               >
                 <LogOut className="mr-1.5 h-4 w-4" />
                 <span>Check Out</span>
@@ -333,11 +329,10 @@ const handleLanguageChange = async (lang: string) => {
           <div className="pt-2 pb-3 space-y-1 px-2">
             <Link
               href="/"
-              className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${
-                isActive('/')
+              className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${isActive('/')
                   ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-700 hover:bg-gray-50 hover:text-blue-700'
-              }`}
+                }`}
               onClick={() => setMenuOpen(false)}
             >
               <Home className="mr-3 h-5 w-5" />
@@ -345,11 +340,10 @@ const handleLanguageChange = async (lang: string) => {
             </Link>
             <Link
               href="/check-in"
-              className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${
-                isActive('/check-in')
+              className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${isActive('/check-in')
                   ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-700 hover:bg-gray-50 hover:text-blue-700'
-              }`}
+                }`}
               onClick={() => setMenuOpen(false)}
             >
               <UserPlus className="mr-3 h-5 w-5" />
@@ -357,11 +351,10 @@ const handleLanguageChange = async (lang: string) => {
             </Link>
             <Link
               href="/been-here-before"
-              className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${
-                isActive('/been-here-before')
+              className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${isActive('/been-here-before')
                   ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-700 hover:bg-gray-50 hover:text-blue-700'
-              }`}
+                }`}
               onClick={() => setMenuOpen(false)}
             >
               <User className="mr-3 h-5 w-5" />
@@ -369,11 +362,10 @@ const handleLanguageChange = async (lang: string) => {
             </Link>
             <Link
               href="/check-out"
-              className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${
-                isActive('/check-out')
+              className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${isActive('/check-out')
                   ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-700 hover:bg-gray-50 hover:text-blue-700'
-              }`}
+                }`}
               onClick={() => setMenuOpen(false)}
             >
               <LogOut className="mr-3 h-5 w-5" />
@@ -484,6 +476,7 @@ const handleLanguageChange = async (lang: string) => {
                       <div className="border-t border-gray-200 my-2"></div>
                     </>
                   )}
+
                   <Link
                     href="/profile"
                     className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
@@ -494,16 +487,7 @@ const handleLanguageChange = async (lang: string) => {
                       Profile
                     </div>
                   </Link>
-                  <Link
-                    href="/settings"
-                    className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <Settings className="mr-2 h-5 w-5" />
-                      Settings
-                    </div>
-                  </Link>
+
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-base font-medium text-red-600 hover:bg-red-50"

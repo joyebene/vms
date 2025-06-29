@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback,useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +15,14 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { convertFileToBase64, uploadBase64File } from "../utils";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { adminAPI } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 
+
+type SystemSettingsType = {
+  visitorPhotoRequired: boolean;
+  trainingRequired: boolean;
+}
 
 type DocumentItem =
   { name: string; file?: File; url: string; type?: string; uploadedAt?: string };
@@ -169,7 +176,35 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
   const [searchEmail, setSearchEmail] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
+    const [settings, setSettings] = useState<SystemSettingsType>({
+      visitorPhotoRequired: false,
+      trainingRequired: false,
+    });
+    const {token} = useAuth()
   const router = useRouter();
+
+
+    useEffect(() => {
+      fetchSettings();
+    }, [token]);
+  
+    const fetchSettings = async () => {
+      if (!token) return;
+  
+  
+      try {
+        const systemSettings = await adminAPI.getSystemSettings(token);
+  
+        // Ensure all properties are present using fallback/default values
+        setSettings({
+          visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
+          trainingRequired: systemSettings?.trainingRequired ?? false,
+        });
+      } catch (err) {
+        console.error('Error fetching system settings:', err);
+        toast.error(err instanceof Error ? err.message : 'Failed to load system settings');
+      }
+    };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchEmail(e.target.value);
@@ -278,9 +313,14 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
       };
 
       // ✅ Don't rely on setForm here — just pass updatedForm directly
-      await handleSubmit(e, updatedForm);
+      handleSubmit(e, updatedForm);
 
-      router.push("/training-doc")
+      if(settings.trainingRequired){
+        router.push("/training-doc")
+      } else {
+        router.push('/')
+      }
+      
 
     } catch (err) {
       console.error("Submission error:", err);
@@ -577,7 +617,10 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
+
+                  {/* Visitor Photo */}
+                  {settings.visitorPhotoRequired && (
+                      <div>
                     <h2 className="text-sm md:text-base text-gray-700 font-semibold">Upload Profile Picture</h2>
                      <div className={`w-[80%] md:w-2/3 lg:w-2/4 h-fit  border-2 border-gray-300 p-2 bg-white rounded-3xl my-4 mx-auto ${form.pics ? "p-1" : "p-10"} `} onDrop={(e) => handleFileUpload(e)}
                     onDragOver={(e) => e.preventDefault()}>
@@ -613,7 +656,8 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                     </label>
                   </div>
                   </div>
-                 
+                  )}
+                
                 </CardContent>
               </Card>
 
@@ -736,7 +780,6 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                                     <input
                                       type="checkbox"
                                       className="accent-blue-500"
-                                      required
                                       checked={selectedHazards[hazard.title]?.selectedControls.includes(ctrl) || false}
                                       onChange={() => toggleControl(hazard.title, ctrl)}
                                     />
@@ -860,9 +903,16 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                       <ArrowUpRight className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5 rotate-180" />
                       Return to Home
                     </Link>
-                    <Button type='submit' className="mt-4 w-full sm:w-auto" disabled={loading}>
+                    {settings.trainingRequired ? (
+                      <Button type='submit' className="mt-4 w-full sm:w-auto" disabled={loading}>
                       {loading ? 'Loading...' : 'Next'}
                     </Button>
+                    ) : (
+                      <Button type='submit' className="mt-4 w-full sm:w-auto" disabled={loading}>
+                      {loading ? 'Submitting...' : 'Submit'}
+                    </Button>
+                    )}
+                    
                   </div>
                 </CardContent>
               </Card>
