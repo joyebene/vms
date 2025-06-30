@@ -7,7 +7,6 @@ import { Settings, Save, AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 export default function SystemSettings() {
  const [settings, setSettings] = useState<SystemSettingsType | null>(null);
-
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +75,7 @@ const handleQrCodeExpiryChange = (value: number) => {
     setSuccessMessage(null);
 
     try {
-      await adminAPI.updateSystemSettings(settings, token);
+      await adminAPI.updateSystemSettings(token, settings);
       setSuccessMessage('System settings updated successfully');
       fetchSettings();
       console.log(settings);

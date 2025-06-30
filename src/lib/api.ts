@@ -1571,7 +1571,7 @@ export const adminAPI = {
   },
 
   // Update system settings
-  updateSystemSettings: async ( token: string, settings?: SystemSettings | null ): Promise<{ message: string }> => {
+  updateSystemSettings: async ( token: string, settings: SystemSettings | null ): Promise<{ message: string }> => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/settings`, {
         method: 'PUT',
