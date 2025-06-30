@@ -44,7 +44,7 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
     const [loading, setLoading] = useState(false);
     const [searchEmail, setSearchEmail] = useState("");
     const [isSearching, setIsSearching] = useState(false);
-    const [employees, setEmployees] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+    const [employees, setEmployees] = useState<{ id: string; firstName: string; lastName: string; siteLocation?: string; meetingLocation?: string; }[]>([]);
 
 
     useEffect(() => {
@@ -63,6 +63,9 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                     id: u._id,
                     firstName: u.firstName,
                     lastName: u.lastName,
+                    siteLocation: u.siteLocation,
+                    meetingLocation: u.meetingLocation
+
                 }));
 
             setEmployees(nonAdminEmployees);
@@ -282,10 +285,14 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                                     <SelectValue placeholder="Select Site Location" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Head Office">Head Office</SelectItem>
-                                    <SelectItem value="Branch A">Branch A</SelectItem>
-                                    <SelectItem value="Branch B">Branch B</SelectItem>
-                                    <SelectItem value="Remote Site">Remote Site</SelectItem>
+                                      {employees.map((employee) => (
+                                        <SelectItem
+                                            key={employee.id}
+                                            value={`${employee.siteLocation?.toLowerCase()}`}
+                                        >
+                                            {employee.siteLocation}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -325,8 +332,14 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                                     <SelectValue placeholder="Select Meeting Location" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Conference Room A">Conference Room A</SelectItem>
-                                    <SelectItem value="Lobby">Lobby</SelectItem>
+                                    {employees.map((employee) => (
+                                        <SelectItem
+                                            key={employee.id}
+                                            value={`${employee.meetingLocation?.toLowerCase()}`}
+                                        >
+                                            {employee.meetingLocation}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
 

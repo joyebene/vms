@@ -175,20 +175,20 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
 
   const [searchEmail, setSearchEmail] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [employees, setEmployees] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+  const [employees, setEmployees] = useState<{ id: string; firstName: string; lastName: string; siteLocation?: string; meetingLocation?: string; }[]>([]);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [settings, setSettings] = useState<SystemSettingsType>({
     visitorPhotoRequired: false,
     trainingRequired: false,
   });
- 
+
   const router = useRouter();
 
   console.log(employees);
 
   useEffect(() => {
     fetchSettings();
-    fetchEmployee();
+    fetchUserDetails();
   }, []);
 
   const fetchSettings = async () => {
@@ -207,7 +207,7 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
     }
   };
 
-  const fetchEmployee = async () => {
+  const fetchUserDetails = async () => {
 
     try {
       const users = await adminAPI.getUsers();
@@ -219,10 +219,15 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
           id: u._id,
           firstName: u.firstName,
           lastName: u.lastName,
+          siteLocation: u.siteLocation,
+          meetingLocation: u.meetingLocation
+
         }));
 
       setEmployees(nonAdminEmployees);
       console.log(nonAdminEmployees);
+
+
 
     } catch (error) {
       console.error('Error fetching employees:', error);
@@ -634,10 +639,14 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
                         <SelectValue placeholder="Site Location" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="site1">Site 1</SelectItem>
-                        <SelectItem value="site2">Site 2</SelectItem>
-                        <SelectItem value="site3">Site 3</SelectItem>
-                        <SelectItem value="dropbox">Dropbox</SelectItem>
+                        {employees.map((employee) => (
+                          <SelectItem
+                            key={employee.id}
+                            value={`${employee.siteLocation?.toLowerCase()}`}
+                          >
+                            {employee.siteLocation}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -720,8 +729,14 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
                         <SelectValue placeholder="Select Meeting Location" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="confroom1">Conference Room 1</SelectItem>
-                        <SelectItem value="confroom2">Conference Room 2</SelectItem>
+                        {employees.map((employee) => (
+                          <SelectItem
+                            key={employee.id}
+                            value={`${employee.meetingLocation?.toLowerCase()}`}
+                          >
+                            {employee.meetingLocation}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <div className="flex flex-col gap-1">
