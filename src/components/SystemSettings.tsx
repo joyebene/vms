@@ -6,13 +6,7 @@ import { adminAPI, SystemSettings as SystemSettingsType } from '@/lib/api';
 import { Settings, Save, AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 export default function SystemSettings() {
-  const [settings, setSettings] = useState<SystemSettingsType>({
-    emailNotificationsEnabled: true,
-    qrCodeExpiryHours: 24,
-    visitorPhotoRequired: false,
-    trainingRequired: false,
-    systemVersion: '1.0.0',
-  });
+ const [settings, setSettings] = useState<SystemSettingsType | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -24,44 +18,55 @@ export default function SystemSettings() {
     fetchSettings();
   }, [token]);
 
-  const fetchSettings = async () => {
-    if (!token) return;
+ const fetchSettings = async () => {
+  if (!token) return;
 
-    setIsLoading(true);
-    setError(null);
+  setIsLoading(true);
+  setError(null);
 
-    try {
-      const systemSettings = await adminAPI.getSystemSettings(token);
+  try {
+    const systemSettings = await adminAPI.getSystemSettings(token);
+    console.log(systemSettings);
+  
+    setSettings({
+      emailNotificationsEnabled: systemSettings?.emailNotificationsEnabled ?? true,
+      qrCodeExpiryHours: systemSettings?.qrCodeExpiryHours ?? 24,
+      visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
+      trainingRequired: systemSettings?.trainingRequired ?? false,
+      systemVersion: systemSettings?.systemVersion ?? '1.0.0',
+    });
+  } catch (err) {
+    console.error('Error fetching system settings:', err);
+    setError(err instanceof Error ? err.message : 'Failed to load system settings');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-      // Ensure all properties are present using fallback/default values
-      setSettings({
-        emailNotificationsEnabled: systemSettings?.emailNotificationsEnabled ?? true,
-        qrCodeExpiryHours: systemSettings?.qrCodeExpiryHours ?? 24,
-        visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
-        trainingRequired: systemSettings?.trainingRequired ?? false,
-        systemVersion: systemSettings?.systemVersion ?? '1.0.0',
-      });
-    } catch (err) {
-      console.error('Error fetching system settings:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load system settings');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const handleToggleSetting = (key: keyof Omit<SystemSettingsType, 'qrCodeExpiryHours' | 'systemVersion'>) => {
-    setSettings((prev) => ({
+const handleToggleSetting = (
+  key: keyof Omit<SystemSettingsType, 'qrCodeExpiryHours' | 'systemVersion'>
+) => {
+  setSettings((prev) => {
+    if (!prev) return prev; // ⛔️ prevent toggle if settings not loaded
+    return {
       ...prev,
       [key]: !prev[key],
-    }));
-  };
+    };
+  });
+};
 
-  const handleQrCodeExpiryChange = (value: number) => {
-    setSettings((prev) => ({
+
+const handleQrCodeExpiryChange = (value: number) => {
+  setSettings((prev) => {
+    if (!prev) return prev;
+    return {
       ...prev,
       qrCodeExpiryHours: value,
-    }));
-  };
+    };
+  });
+};
+
 
   const handleSaveSettings = async () => {
     if (!token) return;
@@ -73,6 +78,9 @@ export default function SystemSettings() {
     try {
       await adminAPI.updateSystemSettings(settings, token);
       setSuccessMessage('System settings updated successfully');
+      fetchSettings();
+      console.log(settings);
+      
     } catch (err) {
       console.error('Error saving system settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to save system settings');

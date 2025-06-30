@@ -5,12 +5,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import AppBar from './AppBar';
-import { AlertCircle, ArrowUpRight, CheckCircle, FileText, Mail, Search, User } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, CheckCircle, FileText, ImageDownIcon, Mail, Search, User } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { newVisitorAPI, adminAPI } from '@/lib/api';
 import toast from "react-hot-toast";
+import { convertFileToBase64, uploadBase64File } from "../utils";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
+
+type SystemSettingsType = {
+    visitorPhotoRequired: boolean;
+}
 
 type FormData = {
     firstName: string;
@@ -26,6 +32,7 @@ type FormData = {
     visitEndDate: string;
     purpose: string;
     agreed: string;
+    pics?: string;
 };
 
 interface VisitorFormProps {
@@ -44,14 +51,34 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
     const [loading, setLoading] = useState(false);
     const [searchEmail, setSearchEmail] = useState("");
     const [isSearching, setIsSearching] = useState(false);
+    const [uploadLoading, setUploadLoading] = useState(false);
+    const [settings, setSettings] = useState<SystemSettingsType>({
+        visitorPhotoRequired: false,
+    });
     const [employees, setEmployees] = useState<{ id: string; firstName: string; lastName: string; siteLocation?: string; meetingLocation?: string; }[]>([]);
 
-
+ console.log(form);
+ 
     useEffect(() => {
-        fetchEmployee();
+        fetchSettings();
+        fetchUserDetails();
     }, []);
 
-    const fetchEmployee = async () => {
+    const fetchSettings = async () => {
+
+        try {
+            const systemSettings = await adminAPI.getSystemSettings();
+
+            // Ensure all properties are present using fallback/default values
+            setSettings({
+                visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
+            });
+        } catch (err) {
+            console.error('Error fetching system settings:', err);
+            toast.error(err instanceof Error ? err.message : 'Failed to load system settings');
+        }
+    };
+    const fetchUserDetails = async () => {
 
         try {
             const users = await adminAPI.getUsers();
@@ -132,6 +159,74 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
         }
     };
 
+
+
+    const MAX_FILE_SIZE_MB = 5;
+
+    type UploadEvent =
+        | React.ChangeEvent<HTMLInputElement>
+        | React.DragEvent<HTMLDivElement>;
+
+
+    const handleFileUpload = async (e: UploadEvent) => {
+        e.preventDefault();
+        const field = "profile pics";
+        let file: File | null = null;
+
+        if ("dataTransfer" in e) {
+            // Handle drag-and-drop
+            file = e.dataTransfer.files?.[0] || null;
+        } else {
+            // Handle traditional input upload
+            file = e.target.files?.[0] || null;
+        }
+
+        if (file) {
+            // ✅ Replace slashes in file name to avoid Cloudinary error
+            const sanitizedFile = new File([file], file.name.replace(/\//g, '-'), {
+                type: file.type,
+            });
+
+            const fileSizeInMB = sanitizedFile.size / (1024 * 1024);
+
+            try {
+                // ✅ Convert to base64
+                const base64 = await convertFileToBase64(sanitizedFile);
+
+                if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+                    alert("File size exceeds 5MB limit. Please upload a smaller image.");
+                    return;
+                }
+
+                if (base64) {
+                    setUploadLoading(true);
+
+                    // ✅ Upload to Cloudinary
+                    const url = await uploadBase64File(base64, "image", setUploadLoading);
+                    setUploadLoading(false);
+
+                    if (url) {
+                        setForm((prev) => ({
+                            ...prev,
+                            pics: url,
+                        }));
+                        console.log("Upload successful:", field);
+                    } else {
+                        console.warn("Upload failed: No URL returned");
+                    }
+                }
+            } catch (error) {
+                console.error("Upload failed:", error);
+                setUploadLoading(false);
+            }
+        } else {
+            console.warn("No file selected");
+        }
+    };
+
+
+
+
     return (
         <main className='min-h-screen bg-gradient-to-br from-white via-indigo-100 to-purple-100 pb-4 sm:pb-8 lg:pb-10'>
             <AppBar />
@@ -188,6 +283,7 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                                                 visitEndDate: new Date().toISOString().slice(0, 16),
                                                 visitorCategory: 'visitor',
                                                 agreed: "",
+                                                pics: "",
                                             })}
                                             className="bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-green-700 transition-colors"
                                         >
@@ -285,7 +381,7 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                                     <SelectValue placeholder="Select Site Location" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                      {employees.map((employee) => (
+                                    {employees.map((employee) => (
                                         <SelectItem
                                             key={employee.id}
                                             value={`${employee.siteLocation?.toLowerCase()}`}
@@ -295,6 +391,48 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                                     ))}
                                 </SelectContent>
                             </Select>
+
+
+                            {/* Visitor Photo */}
+                            {settings.visitorPhotoRequired && (
+                                <div>
+                                    <h2 className="text-sm md:text-base text-gray-700 font-semibold">Upload Profile Picture</h2>
+                                    <div className={`w-[80%] md:w-2/3 lg:w-2/4 h-fit  border-2 border-gray-300 p-2 bg-white rounded-3xl my-4 mx-auto ${form.pics ? "p-1" : "p-10"} `} onDrop={(e) => handleFileUpload(e)}
+                                        onDragOver={(e) => e.preventDefault()}>
+                                        <label htmlFor="pics">
+                                            {form.pics ? (
+                                                <Image
+                                                    src={form.pics}
+                                                    alt="pics img"
+                                                    width={100}
+                                                    height={100}
+                                                    className="w-full h-[200px] object-cover object-center rounded-3xl"
+                                                />
+                                            ) : (
+                                                <>
+                                                    {uploadLoading ? (
+                                                        <div className="flex justify-center items-center h-full w-full">
+                                                            <AiOutlineLoading3Quarters className="animate-spin text-primary text-5xl" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className=" flex items-center justify center gap-2 md:gap-4">
+                                                            <ImageDownIcon color="gray" /> <p className="text-[12px] md:text-sm text-gray-600">Click to upload image</p>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                            <input
+                                                id="pics"
+                                                type="file"
+                                                name="pics"
+                                                className="hidden"
+                                                onChange={(e) => handleFileUpload(e)}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
 
                         <h2 className="text-xl font-semibold mt-6 mb-2">Visit Information</h2>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import AppBar from './AppBar';
-import { AlertCircle, ArrowUpRight, CheckCircle, FileText, ImageDownIcon, Mail, Search, User } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, CheckCircle, FileText, ImageDownIcon, Mail, Search, User, X } from 'lucide-react';
 import Link from 'next/link';
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -651,7 +651,7 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
                     </Select>
                   </div>
 
-                  {/* Visitor Photo */}
+                  {/* Contractor Photo */}
                   {settings.visitorPhotoRequired && (
                     <div>
                       <h2 className="text-sm md:text-base text-gray-700 font-semibold">Upload Profile Picture</h2>
@@ -754,7 +754,7 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
               {/* Hazards Section */}
               <Card>
                 <CardContent>
-                  <h1 className="text-3xl font-bold text-center mb-6 border-b pb-2">HAZARD ASSESSMENT AND CONTROLS</h1>
+                  <h1 className="text-lg sm:text-xl md:text-2xl xl:text-3xl font-bold text-center mb-6 border-b pb-2">HAZARD ASSESSMENT AND CONTROLS</h1>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {hazards.map((hazard, index) => (
                       <div
@@ -762,39 +762,38 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
                         className={`border p-4 rounded-xl shadow-md bg-white cursor-pointer relative ${openHazards[hazard.title] ? "border-blue-500 ring-2 ring-blue-300" : "border-gray-300"
                           }`}
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        {openHazards[hazard.title] && (
+                          <div className="w-full flex items-center justify-end">
+                            <X className="mr-1 md:mr-2" onClick={(e) => {
+                              e.stopPropagation();
+                              toggleHazardBox(hazard.title)
+                              setSelectedHazards((prev) => {
+                                const newState = { ...prev };
+                                delete newState[hazard.title];
+                                return newState;
+                              });
+                            }} />
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between mb-2" onClick={(e) => {
+                          e.stopPropagation();
+                          toggleHazardBox(hazard.title)
+                          setSelectedHazards((prev) => {
+                            // Select
+                            return {
+                              ...prev,
+                              [hazard.title]: {
+                                title: hazard.title,
+                                risk: "",
+                                selectedControls: [],
+                              },
+                            };
+                          })
+                        }}>
                           <span className="text-xl font-semibold">{hazard.title}</span>
                           <span className="text-2xl">{hazard.icon}</span>
                         </div>
-                        <button type="button"
-                          className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 text-xs rounded"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleHazardBox(hazard.title)
-                            setSelectedHazards((prev) => {
-                              if (prev[hazard.title]) {
-                                // Deselect
-                                const newState = { ...prev }
-                                delete newState[hazard.title];
-                                return newState;
-                              } else {
-                                // Select
-                                return {
-                                  ...prev,
-                                  [hazard.title]: {
-                                    title: hazard.title,
-                                    risk: "",
-                                    selectedControls: [],
-                                  },
-                                };
-                              }
-                            });
-                          }}
-
-                        >
-                          {selectedHazards[hazard.title]?.title && selectedHazards[hazard.title]?.risk && selectedHazards[hazard.title]?.selectedControls?.length > 0 ? "Deselect" : "Select"}
-                        </button>
-
                         {openHazards[hazard.title] && (
                           <>
                             <div className="mb-2">

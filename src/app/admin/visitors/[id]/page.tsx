@@ -5,11 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
 import { newVisitorAPI, VisitorForm } from '@/lib/api';
-import { ArrowLeft, QrCode, LogOut, CreditCard, FileText, AlertCircle, Clock } from 'lucide-react';
+import { ArrowLeft, QrCode, LogOut, CreditCard, FileText, AlertCircle, Clock, ImageDownIcon } from 'lucide-react';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import EnhancedTrainingModule from '@/components/EnhancedTrainingModule';
 import DocumentUploader from '@/components/DocumentUploader';
 import EnhancedDocumentViewer from '@/components/EnhancedDocumentViewer';
+import Image from 'next/image';
 
 export default function VisitorDetails() {
   const [visitor, setVisitor] = useState<VisitorForm | null>(null);
@@ -160,7 +161,7 @@ export default function VisitorDetails() {
             Back to Dashboard
           </Link>
 
-          <button
+          <button type="button"
             onClick={() => {
               logout();
               router.push('/');
@@ -306,6 +307,26 @@ function VisitorInfo({ visitor }: { visitor: VisitorForm }) {
         <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
         <div className="space-y-3">
           <div>
+            <p className="text-sm text-gray-500">Visitor&apos;s Photo</p>
+            <div className={`w-[80%] md:w-2/3 lg:w-2/4 h-fit  border-2 border-gray-300 p-2 bg-white rounded-3xl my-4 mx-auto ${visitor.pics ? "p-1" : "p-10"} `} >
+              {visitor.pics ? (
+                <Image
+                  src={visitor.pics}
+                  alt="pics img"
+                  width={100}
+                  height={100}
+                  className="w-full h-[200px] object-cover object-center rounded-3xl"
+                />
+              ) : (
+                <>
+                    <div className=" flex items-center justify center gap-2 md:gap-4">
+                      <ImageDownIcon color="gray" /> <p className="text-[12px] md:text-sm text-gray-600">No image</p>
+                    </div>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
             <p className="text-sm text-gray-500">Name</p>
             <p className="font-medium">{visitor.firstName} {visitor.lastName}</p>
           </div>
@@ -375,7 +396,7 @@ function VisitorInfo({ visitor }: { visitor: VisitorForm }) {
               <p className="font-medium">
                 <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                bg-yellow-100 text-yellow-800'>
-                Completed
+                  Completed
                 </span>
               </p>
             </div>

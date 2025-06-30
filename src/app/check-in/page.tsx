@@ -44,7 +44,25 @@ type FormData = {
   pics?: string;
 };
 
-const defaultVisitorForm = (formType: string) => ({
+type VisitorFormData = {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  visitorCategory: string;
+  siteLocation: string;
+  department: string;
+  hostEmployee: string;
+  meetingLocation: string;
+  visitStartDate: string;
+  visitEndDate: string;
+  purpose: string;
+  agreed: string;
+  pics?: string; // ✅ optional here
+};
+
+
+const defaultVisitorForm = (formType: string): VisitorFormData  => ({
   firstName: '',
   lastName: '',
   phone: '',
@@ -58,6 +76,7 @@ const defaultVisitorForm = (formType: string) => ({
   visitEndDate: new Date().toISOString().slice(0, 16),
   purpose: '',
   agreed: 'off',
+  pics: '', 
 });
 
 const defaultContractorForm = (formType: string): FormData => ({
@@ -76,7 +95,6 @@ const defaultContractorForm = (formType: string): FormData => ({
     "FALL ARREST": 'N',
   },
   documents: [],
-  pics: "",
 });
 
 export default function FormPage() {
@@ -108,6 +126,7 @@ export default function FormPage() {
   };
 
   console.log(contractorForm);
+  
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, updatedFormOverride?: FormData) => {

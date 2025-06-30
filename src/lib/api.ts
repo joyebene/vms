@@ -156,6 +156,7 @@ export interface VisitorForm {
     "FALL ARREST": 'N' | 'Y';
   };
   documents: DocumentItem[];
+  pics?: string;
 }
 
 export interface ApiResponse<T> {
@@ -1560,8 +1561,9 @@ export const adminAPI = {
           'Authorization': `Bearer ${token}`,
         },
       });
-
-      return handleResponse(response);
+     const data = await response.json();
+     return data;
+      // return handleResponse(response);
     } catch (error) {
       console.error('Get system settings error:', error);
       throw error;
@@ -1569,7 +1571,7 @@ export const adminAPI = {
   },
 
   // Update system settings
-  updateSystemSettings: async (settings: SystemSettings, token: string): Promise<{ message: string }> => {
+  updateSystemSettings: async (settings?: SystemSettings | null, token: string): Promise<{ message: string }> => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/settings`, {
         method: 'PUT',
