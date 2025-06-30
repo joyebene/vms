@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { adminAPI } from '@/lib/api';
-import { ArrowLeft, User, Mail, Phone, Building, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Building, AlertCircle, CheckCircle, Map, MapPin, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -12,9 +12,11 @@ interface EditData {
     firstName: string;
     lastName: string;
     email: string;
-    department: string
+    department: string;
+    siteLocation: string;
+    meetingLocation: string;
     phoneNumber: string;
-    role: 'admin' | 'security' | 'staff' | 'manager' | 'trainer' | 'host';
+    role: string;
 }
 
 export default function EditUserPage() {
@@ -24,7 +26,9 @@ export default function EditUserPage() {
     email: '',
     department: '',
     phoneNumber: '',
-    role: 'staff',
+    siteLocation: '',
+    meetingLocation: '',
+    role: '',
   });
   
   
@@ -52,6 +56,8 @@ useEffect(() => {
         lastName: user.lastName,
         email: user.email,
         department: user.department,
+        siteLocation: user.siteLocation || "",
+        meetingLocation: user.meetingLocation || "",
         phoneNumber: user.phoneNumber,
         role: user.role,
       });
@@ -104,8 +110,10 @@ useEffect(() => {
         lastName: '',
         email: '',
         department: '',
+        siteLocation: '',
+        meetingLocation: '',
         phoneNumber: '',
-        role: 'staff',
+        role: '',
       });
 
       // Redirect to the users page after a short delay
@@ -258,28 +266,65 @@ useEffect(() => {
                 />
               </div>
             </div>
+            <div>
+              <label htmlFor="siteLocation" className="block text-sm font-medium text-gray-700 mb-1">
+                Site Location <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="siteLocation"
+                  name="siteLocation"
+                  value={formData.siteLocation}
+                  onChange={handleChange}
+                  required
+                  className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="meetingLocation" className="block text-sm font-medium text-gray-700 mb-1">
+               Meeting Location <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Map className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="meetingLocation"
+                  name="meetingLocation"
+                  value={formData.meetingLocation}
+                  onChange={handleChange}
+                  required
+                  className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="mb-6">
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-              Role <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="block py-2 w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
-            >
-              <option value="admin">Admin</option>
-              <option value="host">Host</option>
-              <option value="security">Security</option>
-              <option value="staff">Staff</option>
-              <option value="manager">Manager</option>
-              <option value="trainer">Trainer</option>
-            </select>
-          </div>
+            <div className='mb-6'>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+               Role <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserCog className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  required
+                  className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
 
           <div className="flex justify-end space-x-3">
             <Link

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useCallback,useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { convertFileToBase64, uploadBase64File } from "../utils";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { adminAPI } from "@/lib/api";
-import { useAuth } from "@/lib/AuthContext";
+
 
 
 type SystemSettingsType = {
@@ -175,36 +175,60 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
 
   const [searchEmail, setSearchEmail] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [employees, setEmployees] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
   const [uploadLoading, setUploadLoading] = useState(false);
-    const [settings, setSettings] = useState<SystemSettingsType>({
-      visitorPhotoRequired: false,
-      trainingRequired: false,
-    });
-    const {token} = useAuth()
+  const [settings, setSettings] = useState<SystemSettingsType>({
+    visitorPhotoRequired: false,
+    trainingRequired: false,
+  });
+ 
   const router = useRouter();
 
+  console.log(employees);
 
-    useEffect(() => {
-      fetchSettings();
-    }, [token]);
-  
-    const fetchSettings = async () => {
-      if (!token) return;
-  
-  
-      try {
-        const systemSettings = await adminAPI.getSystemSettings(token);
-  
-        // Ensure all properties are present using fallback/default values
-        setSettings({
-          visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
-          trainingRequired: systemSettings?.trainingRequired ?? false,
-        });
-      } catch (err) {
-        console.error('Error fetching system settings:', err);
-        toast.error(err instanceof Error ? err.message : 'Failed to load system settings');
-      }
-    };
+  useEffect(() => {
+    fetchSettings();
+    fetchEmployee();
+  }, []);
+
+  const fetchSettings = async () => {
+
+    try {
+      const systemSettings = await adminAPI.getSystemSettings();
+
+      // Ensure all properties are present using fallback/default values
+      setSettings({
+        visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
+        trainingRequired: systemSettings?.trainingRequired ?? false,
+      });
+    } catch (err) {
+      console.error('Error fetching system settings:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to load system settings');
+    }
+  };
+
+  const fetchEmployee = async () => {
+
+    try {
+      const users = await adminAPI.getUsers();
+
+      // Filter out admins and map to only firstname + lastname
+      const nonAdminEmployees = users
+        .filter((u) => u.role !== 'admin')
+        .map((u) => ({
+          id: u._id,
+          firstName: u.firstName,
+          lastName: u.lastName,
+        }));
+
+      setEmployees(nonAdminEmployees);
+      console.log(nonAdminEmployees);
+
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to fetch employees');
+    }
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchEmail(e.target.value);
@@ -315,12 +339,12 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
       // ✅ Don't rely on setForm here — just pass updatedForm directly
       handleSubmit(e, updatedForm);
 
-      if(settings.trainingRequired){
+      if (settings.trainingRequired) {
         router.push("/training-doc")
       } else {
         router.push('/')
       }
-      
+
 
     } catch (err) {
       console.error("Submission error:", err);
@@ -332,45 +356,45 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
 
 
 
-const MAX_FILE_SIZE_MB = 5;
+  const MAX_FILE_SIZE_MB = 5;
 
-const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const files = e.target.files;
-  if (!files || files.length === 0) return;
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-  const uploadedDocs: DocumentItem[] = [];
+    const uploadedDocs: DocumentItem[] = [];
 
-  for (const file of Array.from(files)) {
-    const fileSizeInMB = file.size / (1024 * 1024);
-    if (fileSizeInMB > MAX_FILE_SIZE_MB) {
-      alert(`File "${file.name}" exceeds 5MB limit and will be skipped.`);
-      continue;
-    }
-
-    try {
-      const base64 = await convertFileToBase64(file);
-      const fullBase64 = `data:${file.type};base64,${base64}`;
-      const url = await uploadBase64File(fullBase64, "raw"); // Call your Cloudinary upload function
-
-      if (url) {
-        uploadedDocs.push({
-          name: file.name,
-          url,
-          type: file.type,
-          file: undefined,
-        });
+    for (const file of Array.from(files)) {
+      const fileSizeInMB = file.size / (1024 * 1024);
+      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+        alert(`File "${file.name}" exceeds 5MB limit and will be skipped.`);
+        continue;
       }
-    } catch (error) {
-      console.error(`Document upload failed for "${file.name}":`, error);
-    }
-  }
 
-  // Update form state
-  setForm((prev) => ({
-    ...prev,
-    documents: [...(prev.documents || []), ...uploadedDocs],
-  }));
-};
+      try {
+        const base64 = await convertFileToBase64(file);
+        const fullBase64 = `data:${file.type};base64,${base64}`;
+        const url = await uploadBase64File(fullBase64, "raw"); // Call your Cloudinary upload function
+
+        if (url) {
+          uploadedDocs.push({
+            name: file.name,
+            url,
+            type: file.type,
+            file: undefined,
+          });
+        }
+      } catch (error) {
+        console.error(`Document upload failed for "${file.name}":`, error);
+      }
+    }
+
+    // Update form state
+    setForm((prev) => ({
+      ...prev,
+      documents: [...(prev.documents || []), ...uploadedDocs],
+    }));
+  };
 
 
 
@@ -379,61 +403,61 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     | React.DragEvent<HTMLDivElement>;
 
 
- const handleFileUpload = async (e: UploadEvent) => {
-  e.preventDefault();
-  const field = "profile pics";
-  let file: File | null = null;
+  const handleFileUpload = async (e: UploadEvent) => {
+    e.preventDefault();
+    const field = "profile pics";
+    let file: File | null = null;
 
-  if ("dataTransfer" in e) {
-    // Handle drag-and-drop
-    file = e.dataTransfer.files?.[0] || null;
-  } else {
-    // Handle traditional input upload
-    file = e.target.files?.[0] || null;
-  }
-
-  if (file) {
-    // ✅ Replace slashes in file name to avoid Cloudinary error
-    const sanitizedFile = new File([file], file.name.replace(/\//g, '-'), {
-      type: file.type,
-    });
-
-    const fileSizeInMB = sanitizedFile.size / (1024 * 1024);
-
-    try {
-      // ✅ Convert to base64
-      const base64 = await convertFileToBase64(sanitizedFile);
-
-      if (fileSizeInMB > MAX_FILE_SIZE_MB) {
-        alert("File size exceeds 5MB limit. Please upload a smaller image.");
-        return;
-      }
-
-      if (base64) {
-        setUploadLoading(true);
-
-        // ✅ Upload to Cloudinary
-        const url = await uploadBase64File(base64, "image", setUploadLoading);
-        setUploadLoading(false);
-
-        if (url) {
-          setForm((prev) => ({
-            ...prev,
-            pics: url,
-          }));
-          console.log("Upload successful:", field);
-        } else {
-          console.warn("Upload failed: No URL returned");
-        }
-      }
-    } catch (error) {
-      console.error("Upload failed:", error);
-      setUploadLoading(false);
+    if ("dataTransfer" in e) {
+      // Handle drag-and-drop
+      file = e.dataTransfer.files?.[0] || null;
+    } else {
+      // Handle traditional input upload
+      file = e.target.files?.[0] || null;
     }
-  } else {
-    console.warn("No file selected");
-  }
-};
+
+    if (file) {
+      // ✅ Replace slashes in file name to avoid Cloudinary error
+      const sanitizedFile = new File([file], file.name.replace(/\//g, '-'), {
+        type: file.type,
+      });
+
+      const fileSizeInMB = sanitizedFile.size / (1024 * 1024);
+
+      try {
+        // ✅ Convert to base64
+        const base64 = await convertFileToBase64(sanitizedFile);
+
+        if (fileSizeInMB > MAX_FILE_SIZE_MB) {
+          alert("File size exceeds 5MB limit. Please upload a smaller image.");
+          return;
+        }
+
+        if (base64) {
+          setUploadLoading(true);
+
+          // ✅ Upload to Cloudinary
+          const url = await uploadBase64File(base64, "image", setUploadLoading);
+          setUploadLoading(false);
+
+          if (url) {
+            setForm((prev) => ({
+              ...prev,
+              pics: url,
+            }));
+            console.log("Upload successful:", field);
+          } else {
+            console.warn("Upload failed: No URL returned");
+          }
+        }
+      } catch (error) {
+        console.error("Upload failed:", error);
+        setUploadLoading(false);
+      }
+    } else {
+      console.warn("No file selected");
+    }
+  };
 
 
 
@@ -620,44 +644,44 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
                   {/* Visitor Photo */}
                   {settings.visitorPhotoRequired && (
-                      <div>
-                    <h2 className="text-sm md:text-base text-gray-700 font-semibold">Upload Profile Picture</h2>
-                     <div className={`w-[80%] md:w-2/3 lg:w-2/4 h-fit  border-2 border-gray-300 p-2 bg-white rounded-3xl my-4 mx-auto ${form.pics ? "p-1" : "p-10"} `} onDrop={(e) => handleFileUpload(e)}
-                    onDragOver={(e) => e.preventDefault()}>
-                    <label htmlFor="pics">
-                      {form.pics ? (
-                        <Image
-                          src={form.pics}
-                          alt="pics img"
-                          width={100}
-                          height={100}
-                          className="w-full h-[200px] object-cover object-center rounded-3xl"
-                        />
-                      ) : (
-                        <>
-                          {uploadLoading ? (
-                            <div className="flex justify-center items-center h-full w-full">
-                              <AiOutlineLoading3Quarters className="animate-spin text-primary text-5xl" />
-                            </div>
+                    <div>
+                      <h2 className="text-sm md:text-base text-gray-700 font-semibold">Upload Profile Picture</h2>
+                      <div className={`w-[80%] md:w-2/3 lg:w-2/4 h-fit  border-2 border-gray-300 p-2 bg-white rounded-3xl my-4 mx-auto ${form.pics ? "p-1" : "p-10"} `} onDrop={(e) => handleFileUpload(e)}
+                        onDragOver={(e) => e.preventDefault()}>
+                        <label htmlFor="pics">
+                          {form.pics ? (
+                            <Image
+                              src={form.pics}
+                              alt="pics img"
+                              width={100}
+                              height={100}
+                              className="w-full h-[200px] object-cover object-center rounded-3xl"
+                            />
                           ) : (
-                            <div className=" flex items-center justify center gap-2 md:gap-4">
-                              <ImageDownIcon color="gray" /> <p className="text-[12px] md:text-sm text-gray-600">Click to upload image</p>
-                            </div>
+                            <>
+                              {uploadLoading ? (
+                                <div className="flex justify-center items-center h-full w-full">
+                                  <AiOutlineLoading3Quarters className="animate-spin text-primary text-5xl" />
+                                </div>
+                              ) : (
+                                <div className=" flex items-center justify center gap-2 md:gap-4">
+                                  <ImageDownIcon color="gray" /> <p className="text-[12px] md:text-sm text-gray-600">Click to upload image</p>
+                                </div>
+                              )}
+                            </>
                           )}
-                        </>
-                      )}
-                      <input
-                        id="pics"
-                        type="file"
-                        name="pics"
-                        className="hidden"
-                        onChange={(e) => handleFileUpload(e)}
-                      />
-                    </label>
-                  </div>
-                  </div>
+                          <input
+                            id="pics"
+                            type="file"
+                            name="pics"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e)}
+                          />
+                        </label>
+                      </div>
+                    </div>
                   )}
-                
+
                 </CardContent>
               </Card>
 
@@ -680,8 +704,15 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         <SelectValue placeholder="Select Host Employee" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="john">John</SelectItem>
-                        <SelectItem value="jane">Jane</SelectItem>
+                        {employees.map((employee) => (
+                          <SelectItem
+                            key={employee.id}
+                            value={`${employee.firstName?.toLowerCase()}-${employee.lastName?.toLowerCase()}`}
+                          >
+                            {employee.firstName} {employee.lastName}
+                          </SelectItem>
+                        ))}
+
                       </SelectContent>
                     </Select>
                     <Select value={form.meetingLocation} onValueChange={(value) => setForm({ ...form, meetingLocation: value })} required>
@@ -905,14 +936,14 @@ const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                     </Link>
                     {settings.trainingRequired ? (
                       <Button type='submit' className="mt-4 w-full sm:w-auto" disabled={loading}>
-                      {loading ? 'Loading...' : 'Next'}
-                    </Button>
+                        {loading ? 'Loading...' : 'Next'}
+                      </Button>
                     ) : (
                       <Button type='submit' className="mt-4 w-full sm:w-auto" disabled={loading}>
-                      {loading ? 'Submitting...' : 'Submit'}
-                    </Button>
+                        {loading ? 'Submitting...' : 'Submit'}
+                      </Button>
                     )}
-                    
+
                   </div>
                 </CardContent>
               </Card>

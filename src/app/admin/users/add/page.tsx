@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { adminAPI, SignupData } from '@/lib/api';
-import { ArrowLeft, User, Mail, Phone, Building, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Building, Lock, AlertCircle, CheckCircle, MapPin, Map, UserCog } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AddUserPage() {
@@ -15,8 +15,10 @@ export default function AddUserPage() {
     password: '',
     confirmPassword: '',
     department: '',
+    siteLocation: '',
+    meetingLocation: '',
     phoneNumber: '',
-    role: 'staff',
+    role: '',
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +45,7 @@ export default function AddUserPage() {
     }
 
     // Validate form
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.department || !formData.phoneNumber || !formData.role) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.department || !formData.siteLocation || !formData.meetingLocation || !formData.phoneNumber || !formData.role) {
       setError('Please fill in all required fields');
       return;
     }
@@ -139,6 +141,7 @@ export default function AddUserPage() {
                   value={formData.firstName}
                   onChange={handleChange}
                   required
+                  placeholder='first name'
                   className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
@@ -159,6 +162,7 @@ export default function AddUserPage() {
                   value={formData.lastName}
                   onChange={handleChange}
                   required
+                  placeholder='last name'
                   className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
@@ -180,6 +184,7 @@ export default function AddUserPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                placeholder='email'
                 className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
               />
             </div>
@@ -201,6 +206,7 @@ export default function AddUserPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  placeholder='pass'
                   className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
@@ -221,6 +227,7 @@ export default function AddUserPage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
+                  placeholder='confirm pass'
                   className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
@@ -243,6 +250,7 @@ export default function AddUserPage() {
                   value={formData.phoneNumber}
                   onChange={handleChange}
                   required
+                  placeholder='phone'
                   className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
@@ -263,32 +271,74 @@ export default function AddUserPage() {
                   value={formData.department}
                   onChange={handleChange}
                   required
+                  placeholder='dept'
+                  className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="siteLocation" className="block text-sm font-medium text-gray-700 mb-1">
+                Site Location <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="siteLocation"
+                  name="siteLocation"
+                  value={formData.siteLocation}
+                  onChange={handleChange}
+                  placeholder='site location'
+                  required
+                  className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="meetingLocation" className="block text-sm font-medium text-gray-700 mb-1">
+                Meeting Location <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Map className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="meetingLocation"
+                  name="meetingLocation"
+                  value={formData.meetingLocation}
+                  onChange={handleChange}
+                  required
+                  placeholder="meeting location"
+                  className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                Role <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserCog className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  required
+                  placeholder="role"
                   className="pl-10 py-2 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
             </div>
           </div>
-
-          <div className="mb-6">
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-              Role <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="block py-2 w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md"
-            >
-              <option value="admin">Admin</option>
-              <option value="host">Host</option>
-              <option value="security">Security</option>
-              <option value="staff">Staff</option>
-              <option value="manager">Manager</option>
-              <option value="trainer">Trainer</option>
-            </select>
-          </div>
+           
 
           <div className="flex justify-end space-x-3">
             <Link

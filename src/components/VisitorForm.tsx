@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,8 +8,9 @@ import AppBar from './AppBar';
 import { AlertCircle, ArrowUpRight, CheckCircle, FileText, Mail, Search, User } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { newVisitorAPI } from '@/lib/api';
+import { newVisitorAPI, adminAPI } from '@/lib/api';
 import toast from "react-hot-toast";
+
 
 type FormData = {
     firstName: string;
@@ -43,6 +44,36 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
     const [loading, setLoading] = useState(false);
     const [searchEmail, setSearchEmail] = useState("");
     const [isSearching, setIsSearching] = useState(false);
+    const [employees, setEmployees] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+
+
+    useEffect(() => {
+        fetchEmployee();
+    }, []);
+
+    const fetchEmployee = async () => {
+
+        try {
+            const users = await adminAPI.getUsers();
+
+            // Filter out admins and map to only firstname + lastname
+            const nonAdminEmployees = users
+                .filter((u) => u.role !== 'admin')
+                .map((u) => ({
+                    id: u._id,
+                    firstName: u.firstName,
+                    lastName: u.lastName,
+                }));
+
+            setEmployees(nonAdminEmployees);
+            console.log(nonAdminEmployees);
+
+        } catch (error) {
+            console.error('Error fetching employees:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to fetch employees');
+        }
+    };
+
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchEmail(e.target.value);
@@ -63,7 +94,7 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
             }
 
             console.log(data);
-            
+
 
             // ✅ Set the returned data into your form
             setForm((prevForm) => ({
@@ -277,8 +308,15 @@ const VisitorForm = ({ form, handleChange, handleSubmit, setForm, setFormType, e
                                     <SelectValue placeholder="Select Employee" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="John Smith">John Smith</SelectItem>
-                                    <SelectItem value="Jane Doe">Jane Doe</SelectItem>
+                                    {employees.map((employee) => (
+                                        <SelectItem
+                                            key={employee.id}
+                                            value={`${employee.firstName?.toLowerCase()}-${employee.lastName?.toLowerCase()}`}
+                                        >
+                                            {employee.firstName} {employee.lastName}
+                                        </SelectItem>
+                                    ))}
+
                                 </SelectContent>
                             </Select>
 

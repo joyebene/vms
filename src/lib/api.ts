@@ -36,6 +36,8 @@ export interface SignupData {
   password: string;
   confirmPassword?: string;
   department: string;
+  siteLocation?: string;
+  meetingLocation?: string;
   phoneNumber: string;
   role?: string;
 }
@@ -62,8 +64,10 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'security' | 'staff' | 'manager' | 'trainer' | 'host';
+  role: string;
   department: string;
+  siteLocation?: string;
+  meetingLocation?: string;
   phoneNumber: string;
   isActive: boolean;
   createdAt: string;
@@ -1448,7 +1452,7 @@ export interface AuditLog {
 
 export const adminAPI = {
   // Get all users
-  getUsers: async (token: string, role?: string, department?: string, isActive?: boolean, search?: string): Promise<User[]> => {
+  getUsers: async (token?: string, role?: string, department?: string, isActive?: boolean, search?: string): Promise<User[]> => {
     try {
       let url = `${NEXT_PUBLIC_API_BASE_URL}/admin/users`;
       const params = new URLSearchParams();
@@ -1464,9 +1468,6 @@ export const adminAPI = {
 
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
 
       const data = await response.json();
@@ -1551,7 +1552,7 @@ export const adminAPI = {
   },
 
   // Get system settings
-  getSystemSettings: async (token: string): Promise<SystemSettings> => {
+  getSystemSettings: async (token?: string): Promise<SystemSettings> => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/settings`, {
         method: 'GET',
