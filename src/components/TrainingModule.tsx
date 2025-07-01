@@ -19,7 +19,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [trainingStatus, setTrainingStatus] = useState<'not_started' | 'in_progress' | 'completed' | 'failed' | 'not_available'>('not_started');
-  const [score, setScore] = useState<number | null>(null);
+  const [score, setScore] = useState<number>(0);
 
   // Fetch trainings and training status
   useEffect(() => {
@@ -114,9 +114,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
         // Try to submit to API
         const response: TrainingSubmissionResponse = await trainingAPI.submitTraining(
           visitorId,
-          currentTraining._id,
-          selectedAnswers,
-          token
+          score,
         );
 
         setScore(response.score);
@@ -125,7 +123,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
       } catch (apiError) {
         console.error('Error submitting training to API:', apiError);
 
-          // Calculate score locally as fallback
+        // Calculate score locally as fallback
         const questionsLength = currentTraining?.questions?.length || 1; // fallback to prevent divide-by-zero
         // Calculate score locally as fallback
         const correctAnswers = selectedAnswers.filter(
@@ -149,7 +147,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
     }
   };
 
-    // Progress percentage for quiz
+  // Progress percentage for quiz
   const progressPercentage = currentTraining?.questions?.length
     ? Math.round(((currentQuestionIndex + 1) / currentTraining.questions.length) * 100)
     : 0;
@@ -206,7 +204,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
                 setCurrentQuestionIndex(0);
                 setSelectedAnswers(Array(currentTraining?.questions?.length || 0).fill(-1));
                 setTrainingStatus('in_progress');
-                setScore(null);
+                setScore(0);
               }}
               className="mt-4 bg-blue-900 text-white px-6 py-2 rounded-lg"
             >
@@ -276,7 +274,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
                 Previous
               </button>
 
-              {currentTraining?.questions && currentQuestionIndex < currentTraining.questions.length - 1  ? (
+              {currentTraining?.questions && currentQuestionIndex === currentTraining.questions.length - 1 ? (
                 <button
                   onClick={handleSubmitTraining}
                   disabled={isSubmitting || selectedAnswers[currentQuestionIndex] === -1}
@@ -285,7 +283,7 @@ export default function TrainingModule({ visitorId, token, onComplete, onClose }
                   {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               ) : (
-                <button
+                <button type="button"
                   onClick={handleNextQuestion}
                   disabled={selectedAnswers[currentQuestionIndex] === -1}
                   className="px-4 py-2 bg-blue-900 text-white rounded-lg disabled:opacity-50"
