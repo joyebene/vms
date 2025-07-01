@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import Image from 'next/image';
 import { newVisitorAPI } from "@/lib/api";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import { convertFileToBase64, uploadBase64File } from "../utils";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { adminAPI } from "@/lib/api";
@@ -182,7 +181,7 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
     trainingRequired: false,
   });
 
-  const router = useRouter();
+  
 
   console.log(employees);
 
@@ -344,14 +343,7 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
       // ✅ Don't rely on setForm here — just pass updatedForm directly
       handleSubmit(e, updatedForm);
 
-      if (!error) {
-        if (settings.trainingRequired) {
-          router.push("/training-doc")
-          
-        } else {
-          router.push('/')
-        }
-      }
+     
 
 
     } catch (err) {

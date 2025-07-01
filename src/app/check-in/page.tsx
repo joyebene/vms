@@ -2,7 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import ContractorForm from '@/components/ContractorForm';
 import VisitorForm from '@/components/VisitorForm';
+import { useRouter } from "next/navigation";
+import { adminAPI } from '@/lib/api';
+import toast from "react-hot-toast";
 
+
+type SystemSettingsType = {
+  visitorPhotoRequired: boolean;
+  trainingRequired: boolean;
+}
 
 
 type DocumentItem =
@@ -103,6 +111,31 @@ export default function FormPage() {
   const [contractorForm, setContractorForm] = useState(defaultContractorForm('contractor'));
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [settings, setSettings] = useState<SystemSettingsType>({
+      visitorPhotoRequired: false,
+      trainingRequired: false,
+    });
+    const router = useRouter();
+
+     useEffect(() => {
+        fetchSettings();
+      }, []);
+
+    const fetchSettings = async () => {
+    
+        try {
+          const systemSettings = await adminAPI.getSystemSettings();
+    
+          // Ensure all properties are present using fallback/default values
+          setSettings({
+            visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
+            trainingRequired: systemSettings?.trainingRequired ?? false,
+          });
+        } catch (err) {
+          console.error('Error fetching system settings:', err);
+          toast.error(err instanceof Error ? err.message : 'Failed to load system settings');
+        }
+      };
 
 
   useEffect(() => {
@@ -171,6 +204,14 @@ export default function FormPage() {
         alert("Visitor Form submitted Successfully!");
       } else {
         alert("Redirecting You to Training Page!");
+        if (settings.trainingRequired) {
+          router.push("/training-doc")
+          
+        } else {
+          alert("Contractor Form Submitted")
+          router.push('/')
+        }
+      
       }
 
 

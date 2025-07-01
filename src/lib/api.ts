@@ -807,7 +807,7 @@ export const notificationAPI = {
   // Send notification to visitor
   sendVisitorNotification: async (visitorId: string, type: Notification['type'], message: string, token: string): Promise<{ message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/visitor`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/notifications/visitor`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -826,7 +826,7 @@ export const notificationAPI = {
   // Send notification to host
   sendHostNotification: async (hostId: string, type: Notification['type'], visitorId: string, message: string, token: string): Promise<{ message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/host`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/notifications/host`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -845,14 +845,16 @@ export const notificationAPI = {
   // Get notification history
   getNotificationHistory: async (token: string): Promise<Notification[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/history`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/notifications/history`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      return handleResponse(response);
+      const data = await response.json();
+     return data
+      
     } catch (error) {
       console.error('Get notification history error:', error);
       throw error;
@@ -862,14 +864,15 @@ export const notificationAPI = {
   // Get notification settings
   getNotificationSettings: async (token: string): Promise<NotificationSettings> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/settings`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/notifications/settings`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-
-      return handleResponse(response);
+     const data = await response.json();
+     return data
+      
     } catch (error) {
       console.error('Get notification settings error:', error);
       throw error;
@@ -879,7 +882,7 @@ export const notificationAPI = {
   // Update notification settings
   updateNotificationSettings: async (settings: NotificationSettings, token: string): Promise<{ message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/settings`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/notifications/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
