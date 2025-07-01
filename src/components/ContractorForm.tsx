@@ -344,10 +344,13 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
       // ✅ Don't rely on setForm here — just pass updatedForm directly
       handleSubmit(e, updatedForm);
 
-      if (settings.trainingRequired) {
-        router.push("/training-doc")
-      } else {
-        router.push('/')
+      if (!error) {
+        if (settings.trainingRequired) {
+          router.push("/training-doc")
+          
+        } else {
+          router.push('/')
+        }
       }
 
 

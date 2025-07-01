@@ -2120,17 +2120,16 @@ export const trainingAPI = {
     }
   },
 
-  submitTraining: async (visitorId: string, trainingId: string, answers: number[], token: string): Promise<TrainingSubmissionResponse> => {
+  submitTraining: async (contractorId: string, score: number): Promise<TrainingSubmissionResponse> => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ visitorId, trainingId, answers }),
+        body: JSON.stringify({ contractorId, score }),
       });
-
+     
       return handleResponse(response);
     } catch (error) {
       console.error('Submit training error:', error);
@@ -2189,6 +2188,19 @@ export const trainingAPI = {
       throw error;
     }
   },
+
+  toggleTrainingStatus: async (trainingId: string, token: string | null) => {
+  const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/${trainingId}/toggle`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) throw new Error('Failed to toggle status');
+  return res.json();
+}
+
 
 
 };

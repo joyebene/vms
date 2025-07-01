@@ -139,6 +139,17 @@ export default function TrainingPage() {
     fetchVisitors();
   };
 
+  const handleToggleStatus = async (trainingId: string) => {
+    try {
+      await trainingAPI.toggleTrainingStatus(trainingId, token);
+      fetchTrainings(); // Refresh list
+    } catch (error) {
+      console.error('Failed to toggle training status:', error);
+      alert('Error updating status');
+    }
+  };
+
+
   if (!user) {
     return null; // Layout will handle unauthorized access
   }
@@ -215,6 +226,14 @@ export default function TrainingPage() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(training._id)}
+                          className={`text-sm px-2 py-1 rounded ${training.isActive ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}
+                        >
+                          {training.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+
                       </div>
                     </div>
                     <div className="mt-2 flex items-center">
@@ -287,7 +306,7 @@ export default function TrainingPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {filteredVisitors.map((visitor) => (
-                  <button
+                  <button type="button"
                     key={visitor._id}
                     onClick={() => setSelectedVisitorId(visitor._id)}
                     className={`text-left p-4 rounded-md border ${selectedVisitorId === visitor._id

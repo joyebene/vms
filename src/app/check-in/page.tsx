@@ -154,6 +154,10 @@ export default function FormPage() {
       const data = await response.json();
       console.log(`${formType} form submitted:`, data);
 
+      if(!isVisitor) {
+        localStorage.setItem('contractorId', data._id);
+      }
+
       if (isVisitor) {
         setVisitorForm(defaultVisitorForm(formType));
       } else {
