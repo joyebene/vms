@@ -39,7 +39,7 @@ export default function EnhancedTrainingModule({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [score, setScore] = useState<number>(null);
+  const [score, setScore] = useState<number>(0);
   const [passed, setPassed] = useState<boolean | null>(null);
   const [showHint, setShowHint] = useState(false);
 
