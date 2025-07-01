@@ -531,7 +531,7 @@ export default function EnhancedTrainingModule({
                     setCurrentStep('intro');
                     setCurrentQuestionIndex(0);
                     setSelectedAnswers(Array(currentTraining.questions?.length).fill(-1));
-                    setScore(null);
+                    setScore(0);
                     setPassed(null);
                     setTimeSpent(0);
                   }}
