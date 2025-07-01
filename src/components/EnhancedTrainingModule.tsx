@@ -39,7 +39,7 @@ export default function EnhancedTrainingModule({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [score, setScore] = useState<number | null>(null);
+  const [score, setScore] = useState<number>(null);
   const [passed, setPassed] = useState<boolean | null>(null);
   const [showHint, setShowHint] = useState(false);
 
@@ -153,9 +153,7 @@ export default function EnhancedTrainingModule({
         // Try to submit to API
         const response: TrainingSubmissionResponse = await trainingAPI.submitTraining(
           visitorId,
-          currentTraining._id,
-          selectedAnswers,
-          token
+          score
         );
 
         setScore(response.score);
