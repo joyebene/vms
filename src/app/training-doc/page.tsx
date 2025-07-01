@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { trainingAPI, Training } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
-
 export default function TrainingPage() {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, Record<number, string>>>({});
@@ -21,7 +20,7 @@ export default function TrainingPage() {
     const fetchTrainings = async () => {
       try {
         const response = await trainingAPI.getAllTrainings();
-        const activeTraining = response.filter((res: Training) => res.isActive === true)
+        const activeTraining = response.filter((res: Training) => res.isActive === true);
         setTrainings(activeTraining);
       } catch (error) {
         console.error('Failed to fetch training content:', error);
@@ -41,9 +40,18 @@ export default function TrainingPage() {
   };
 
   const handleQuizSubmit = async (trainingIndex: number) => {
+    const training = trainings[trainingIndex];
+
+    if (training.videos?.length && !completedVideos[training._id]) {
+      return alert('Please complete all videos before taking the quiz.');
+    }
+
+    if (training.books?.length && !training.books.every(b => completedBooks[`${training._id}-${b.name}`])) {
+      return alert('Please sign all books before taking the quiz.');
+    }
+
     setShowResults((prev) => ({ ...prev, [trainingIndex]: true }));
 
-    const training = trainings[trainingIndex];
     const quizQuestions = training.questions || [];
     const selected = selectedAnswers[trainingIndex] || {};
     let correct = 0;
@@ -86,6 +94,7 @@ export default function TrainingPage() {
   };
 
   const passedAnyTraining = Object.values(scores).some(score => score >= 70);
+
   const handleRedoTraining = () => {
     setSelectedAnswers({});
     setShowResults({});
@@ -100,24 +109,26 @@ export default function TrainingPage() {
     return scores[index - 1] >= 70;
   };
 
-const handleCompleteTraining = async () => {
-  const contractorId = localStorage.getItem('contractorId');
-  if (!contractorId) return alert('Contractor ID not found!');
+  const handleCompleteTraining = async () => {
+    const contractorId = localStorage.getItem('contractorId');
+    if (!contractorId) {
+      alert('Missing contractor ID. Please re-check in.');
+      return;
+    }
 
-  const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
-  const averageScore = Math.round(totalScore / Object.values(scores).length);
+    const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
+    const averageScore = Math.round(totalScore / Object.values(scores).length);
 
-  try {
-    await trainingAPI.submitTraining(contractorId, averageScore);
-    alert('✅ Training completed!');
-    router.push("/");
-    window.location.href = '/'; // or navigate to next step
-  } catch (err) {
-    console.error(err);
-    alert('❌ Failed to complete training.');
-  }
-};
-
+    try {
+      await trainingAPI.submitTraining(contractorId, averageScore);
+      alert('✅ Training completed!');
+      router.push("/");
+      window.location.href = '/';
+    } catch (err) {
+      console.error(err);
+      alert('❌ Failed to complete training.');
+    }
+  };
 
   return (
     <div>
@@ -133,7 +144,6 @@ const handleCompleteTraining = async () => {
               </div>
             ) : (
               <>
-                {/* Video Section */}
                 <section className="bg-white border rounded-2xl p-6 shadow-lg">
                   <h2 className="text-2xl font-semibold mb-4">{training.title} - Videos</h2>
                   {training.videos?.length ? training.videos.map((video, i) => (
@@ -150,7 +160,6 @@ const handleCompleteTraining = async () => {
                   )) : <p>No videos available</p>}
                 </section>
 
-                {/* Books Section */}
                 <section className="bg-white border rounded-2xl p-6 shadow-lg">
                   <h2 className="text-2xl font-semibold mb-4">{training.title} - Books</h2>
                   {training.books?.length ? training.books.map((book, i) => (
@@ -165,7 +174,6 @@ const handleCompleteTraining = async () => {
                   )) : <p>No books available</p>}
                 </section>
 
-                {/* Quiz Section */}
                 <section className="bg-white border rounded-2xl p-6 shadow-lg">
                   <h2 className="text-2xl font-semibold mb-4">{training.title} - Quiz</h2>
                   {training.questions?.length ? (
@@ -193,7 +201,10 @@ const handleCompleteTraining = async () => {
                       ))}
                       <button
                         type="submit"
-                        disabled={!completedVideos[training._id] && !training.books?.every((b) => completedBooks[`${training._id}-${b.name}`])}
+                        disabled={
+                          Boolean(training.videos?.length && !completedVideos[training._id]) ||
+                          Boolean(training.books?.length && !training.books.every((b) => completedBooks[`${training._id}-${b.name}`]))
+                        }
                         className="px-6 py-2 rounded-full bg-green-600 text-white disabled:bg-gray-300"
                       >
                         Submit Quiz
