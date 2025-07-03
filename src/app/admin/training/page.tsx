@@ -469,7 +469,7 @@ export default function TrainingPage() {
                     className={`cursor-pointer border border-dashed p-3 text-center rounded 
           ${videoUploadLoading ? 'border-gray-300 bg-gray-100' : 'hover:border-blue-500 hover:bg-blue-50'}`}
                   >
-                    {videoUploadLoading && idx === editForm.videos?.length - 1 ? (
+                    {videoUploadLoading && idx === (editForm.videos?.length ?? 0) - 1 ? (
                       <p className="text-blue-500 text-sm">Uploading video...</p>
                     ) : video.url ? (
                       <p className="text-green-600 text-sm">Uploaded: {video.name}</p>
@@ -533,7 +533,7 @@ export default function TrainingPage() {
                     className={`cursor-pointer border border-dashed p-3 text-center rounded 
           ${bookUploadLoading ? 'border-gray-300 bg-gray-100' : 'hover:border-blue-500 hover:bg-blue-50'}`}
                   >
-                    {bookUploadLoading && idx === editForm.books?.length - 1 ? (
+                    {bookUploadLoading && idx === (editForm.books?.length ?? 0) - 1 ? (
                       <p className="text-blue-500 text-sm">Uploading book...</p>
                     ) : book.url ? (
                       <p className="text-green-600 text-sm">Uploaded: {book.name}</p>
