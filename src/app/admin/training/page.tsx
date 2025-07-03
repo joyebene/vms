@@ -6,6 +6,7 @@ import TrainingEnrollment from '@/components/TrainingEnrollment';
 import { trainingAPI, Training, newVisitorAPI, VisitorForm } from '@/lib/api';
 import { BookOpen, Search, AlertCircle, CheckCircle, XCircle, Edit, Trash2, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { convertFileToBase64, uploadBase64File } from '@/utils';
 
 export default function TrainingPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,6 +20,9 @@ export default function TrainingPage() {
   const [editingTraining, setEditingTraining] = useState<Training | null>(null);
   const [editForm, setEditForm] = useState<Partial<Training>>({});
   const [isUpdating, setIsUpdating] = useState(false);
+  const [videoUploadLoading, setVideoUploadLoading] = useState(false);
+  const [bookUploadLoading, setBookUploadLoading] = useState(false);
+
 
   const { token, user } = useAuth();
 
@@ -149,6 +153,51 @@ export default function TrainingPage() {
     }
   };
 
+  // Upload Handlers
+  const handleEditVideoUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const sanitized = new File([file], file.name.replace(/\//g, '-'), { type: file.type });
+
+    try {
+      setVideoUploadLoading(true);
+      const base64 = await convertFileToBase64(sanitized);
+      const url = await uploadBase64File(base64, 'video', setVideoUploadLoading);
+
+      setEditForm(prev => {
+        const updated = [...(prev.videos || [])];
+        updated[index] = { name: sanitized.name, url };
+        return { ...prev, videos: updated };
+      });
+    } catch (err) {
+      console.error('Upload failed:', err);
+      setVideoUploadLoading(false);
+    }
+  };
+
+  const handleEditBookUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const sanitized = new File([file], file.name.replace(/\//g, '-'), { type: file.type });
+
+    try {
+      setBookUploadLoading(true);
+      const base64 = await convertFileToBase64(sanitized);
+      const url = await uploadBase64File(base64, 'raw', setBookUploadLoading);
+
+      setEditForm(prev => {
+        const updated = [...(prev.books || [])];
+        updated[index] = { name: sanitized.name, url };
+        return { ...prev, books: updated };
+      });
+    } catch (err) {
+      console.error('Book upload failed:', err);
+      setBookUploadLoading(false);
+    }
+  };
+
 
   if (!user) {
     return null; // Layout will handle unauthorized access
@@ -211,13 +260,27 @@ export default function TrainingPage() {
                           type="button"
                           onClick={() => {
                             setEditingTraining(training);
-                            setEditForm({ title: training.title, description: training.description });
+                            setEditForm({
+                              title: training.title || '',
+                              description: training.description || '',
+                              type: training.type || '',
+                              videos: training.videos?.length ? training.videos : [],
+                              books: training.books?.length ? training.books : [],
+                              questions: training.questions?.length
+                                ? training.questions.map(q => ({
+                                  question: q.question || '',
+                                  options: q.options || ['', '', '', ''],
+                                  answer: typeof q.answer === 'number' ? q.answer : 0,
+                                }))
+                                : [],
+                            });
                           }}
                           className="text-blue-600 hover:text-blue-800"
                           title="Edit Training"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
+
 
                         <button type="button"
                           onClick={() => handleDelete(training._id)}
@@ -337,10 +400,12 @@ export default function TrainingPage() {
       </div>
 
       {editingTraining && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Edit Training</h2>
-            <label className="block mb-2">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Edit Training</h2>
+
+            {/* Title */}
+            <label className="block mb-3">
               <span className="text-sm text-gray-700">Title</span>
               <input
                 type="text"
@@ -349,7 +414,9 @@ export default function TrainingPage() {
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
               />
             </label>
-            <label className="block mb-4">
+
+            {/* Description */}
+            <label className="block mb-3">
               <span className="text-sm text-gray-700">Description</span>
               <textarea
                 value={editForm.description || ''}
@@ -357,14 +424,219 @@ export default function TrainingPage() {
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
               />
             </label>
-            <div className="flex justify-end space-x-2">
-              <button type="button"
+
+            {/* Type */}
+            <label className="block mb-4">
+              <span className="text-sm text-gray-700">Type</span>
+              <select
+                value={editForm.type || ''}
+                onChange={(e) => setEditForm(prev => ({ ...prev, type: e.target.value }))}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              >
+                <option value="">Select type</option>
+                <option value="safety">Safety</option>
+                <option value="security">Security</option>
+                <option value="procedure">Procedure</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+
+            {/* Videos */}
+            <div className="mb-4">
+              <h3 className="font-semibold mb-2">Videos</h3>
+              {editForm.videos?.map((video, idx) => (
+                <div key={idx} className="mb-3">
+                  <input
+                    type="text"
+                    placeholder="Video Name"
+                    value={video.name}
+                    onChange={(e) =>
+                      setEditForm(prev => {
+                        const updated = [...(prev.videos || [])];
+                        updated[idx].name = e.target.value;
+                        return { ...prev, videos: updated };
+                      })
+                    }
+                    className="mb-2 w-full border px-2 py-1 rounded"
+                    disabled={videoUploadLoading}
+                  />
+
+                  <div
+                    onClick={() =>
+                      !videoUploadLoading &&
+                      document.getElementById(`edit-video-upload-${idx}`)?.click()
+                    }
+                    className={`cursor-pointer border border-dashed p-3 text-center rounded 
+          ${videoUploadLoading ? 'border-gray-300 bg-gray-100' : 'hover:border-blue-500 hover:bg-blue-50'}`}
+                  >
+                    {videoUploadLoading && idx === editForm.videos?.length - 1 ? (
+                      <p className="text-blue-500 text-sm">Uploading video...</p>
+                    ) : video.url ? (
+                      <p className="text-green-600 text-sm">Uploaded: {video.name}</p>
+                    ) : (
+                      <p className="text-gray-500 text-sm">Click to upload video</p>
+                    )}
+                  </div>
+
+                  <input
+                    id={`edit-video-upload-${idx}`}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => handleEditVideoUpload(idx, e)}
+                    disabled={videoUploadLoading}
+                  />
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setEditForm(prev => ({
+                    ...prev,
+                    videos: [...(prev.videos || []), { name: '', url: '' }]
+                  }))
+                }
+                className="text-sm text-blue-600 underline"
+                disabled={videoUploadLoading}
+              >
+                ➕ Add Video
+              </button>
+            </div>
+
+            {/* Books */}
+            <div className="mb-4">
+              <h3 className="font-semibold mb-2">Books</h3>
+              {editForm.books?.map((book, idx) => (
+                <div key={idx} className="mb-3">
+                  <input
+                    type="text"
+                    placeholder="Book Name"
+                    value={book.name}
+                    onChange={(e) =>
+                      setEditForm(prev => {
+                        const updated = [...(prev.books || [])];
+                        updated[idx].name = e.target.value;
+                        return { ...prev, books: updated };
+                      })
+                    }
+                    className="mb-2 w-full border px-2 py-1 rounded"
+                    disabled={bookUploadLoading}
+                  />
+
+                  <div
+                    onClick={() =>
+                      !bookUploadLoading &&
+                      document.getElementById(`edit-book-upload-${idx}`)?.click()
+                    }
+                    className={`cursor-pointer border border-dashed p-3 text-center rounded 
+          ${bookUploadLoading ? 'border-gray-300 bg-gray-100' : 'hover:border-blue-500 hover:bg-blue-50'}`}
+                  >
+                    {bookUploadLoading && idx === editForm.books?.length - 1 ? (
+                      <p className="text-blue-500 text-sm">Uploading book...</p>
+                    ) : book.url ? (
+                      <p className="text-green-600 text-sm">Uploaded: {book.name}</p>
+                    ) : (
+                      <p className="text-gray-500 text-sm">Click to upload book</p>
+                    )}
+                  </div>
+
+                  <input
+                    id={`edit-book-upload-${idx}`}
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    className="hidden"
+                    placeholder='book'
+                    onChange={(e) => handleEditBookUpload(idx, e)}
+                    disabled={bookUploadLoading}
+                  />
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setEditForm(prev => ({
+                    ...prev,
+                    books: [...(prev.books || []), { name: '', url: '' }]
+                  }))
+                }
+                className="text-sm text-blue-600 underline"
+                disabled={bookUploadLoading}
+              >
+                ➕ Add Book
+              </button>
+            </div>
+
+
+            {/* Quiz */}
+            <div className="mb-4">
+              <h3 className="font-semibold mb-2">Quiz Questions</h3>
+              {editForm.questions?.map((q, qIdx) => (
+                <div key={qIdx} className="mb-3 border p-2 rounded bg-gray-50">
+                  <input
+                    type="text"
+                    placeholder="Question"
+                    value={q.question}
+                    onChange={(e) => {
+                      const updated = [...(editForm.questions || [])];
+                      updated[qIdx].question = e.target.value;
+                      setEditForm(prev => ({ ...prev, questions: updated }));
+                    }}
+                    className="w-full mb-2 border px-2 py-1 rounded"
+                  />
+                  {q.options.map((opt, oIdx) => (
+                    <input
+                      key={oIdx}
+                      type="text"
+                      placeholder={`Option ${oIdx + 1}`}
+                      value={opt}
+                      onChange={(e) => {
+                        const updated = [...(editForm.questions || [])];
+                        updated[qIdx].options[oIdx] = e.target.value;
+                        setEditForm(prev => ({ ...prev, questions: updated }));
+                      }}
+                      className="w-full mb-1 border px-2 py-1 rounded"
+                    />
+                  ))}
+                  <label className="text-xs text-gray-600">Correct Answer Index:</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={q.options.length - 1}
+                    value={q.answer}
+                    placeholder='ans'
+                    onChange={(e) => {
+                      const updated = [...(editForm.questions || [])];
+                      updated[qIdx].answer = parseInt(e.target.value);
+                      setEditForm(prev => ({ ...prev, questions: updated }));
+                    }}
+                    className="w-full border px-2 py-1 rounded"
+                  />
+                </div>
+              ))}
+              <button
+                onClick={() =>
+                  setEditForm(prev => ({
+                    ...prev,
+                    questions: [...(prev.questions || []), { question: '', options: ['', '', '', ''], answer: 0 }]
+                  }))
+                }
+                className="text-sm text-blue-600 underline"
+              >
+                ➕ Add Question
+              </button>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end space-x-2 mt-4">
+              <button
                 onClick={() => setEditingTraining(null)}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
               >
                 Cancel
               </button>
-              <button type="button"
+              <button
                 onClick={handleEdit}
                 disabled={isUpdating}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
