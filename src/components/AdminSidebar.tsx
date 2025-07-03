@@ -16,7 +16,8 @@ import {
   X,
   ChevronDown,
   ChevronRight,
-  QrCode
+  QrCode,
+  Group
 } from 'lucide-react';
 
 interface NavItem {
@@ -111,6 +112,11 @@ export default function AdminSidebar() {
       title: 'Training',
       href: '/admin/training',
       icon: <BookOpen className="h-5 w-5" />,
+    },
+    {
+      title: 'Group',
+      href: '/admin/group',
+      icon: <Group className="h-5 w-5" />,
     },
     {
       title: 'Analytics',

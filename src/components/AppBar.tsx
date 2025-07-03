@@ -18,7 +18,8 @@ import {
   BookOpen,
   LayoutDashboard,
   QrCode,
-  Users
+  Users,
+  Group
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -232,6 +233,16 @@ export default function AppBar({ showAuthButtons = true }: AppBarProps) {
                                 </div>
                               </Link>
                               <Link
+                                href="/admin/group"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={() => setUserMenuOpen(false)}
+                              >
+                                <div className="flex items-center">
+                                  <Group className="mr-2 h-4 w-4" />
+                                  Group
+                                </div>
+                              </Link>
+                              <Link
                                 href="/admin/analytics"
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 onClick={() => setUserMenuOpen(false)}
@@ -441,6 +452,16 @@ export default function AppBar({ showAuthButtons = true }: AppBarProps) {
                         <div className="flex items-center">
                           <BookOpen className="mr-2 h-5 w-5" />
                           Training
+                        </div>
+                      </Link>
+                      <Link
+                        href="/admin/group"
+                        className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <div className="flex items-center">
+                          <Group className="mr-2 h-5 w-5" />
+                          Group
                         </div>
                       </Link>
                       <Link

@@ -65,6 +65,7 @@ export interface User {
   lastName: string;
   email: string;
   role: string;
+  groups: string[];
   department: string;
   siteLocation?: string;
   meetingLocation?: string;
@@ -1453,6 +1454,11 @@ export interface AuditLog {
   details: Record<string, any>;
 }
 
+export interface Group {
+  _id: string;
+  name: string;
+  description?: string;
+}
 
 
 export const adminAPI = {
@@ -1656,6 +1662,46 @@ export const adminAPI = {
       console.error('Add license error:', error);
       throw error;
     }
+  },
+
+  // Fetch all groups
+  fetchGroups: async (): Promise<Group[]> => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups`);
+    if (!res.ok) throw new Error('Failed to fetch groups');
+    return res.json();
+  },
+
+  // Create a new group
+  createGroup: async (group: { name: string; description?: string }) => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(group),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create group');
+    return data;
+  },
+
+  // Assign groups to a user or host
+  assignGroupsToUser: async (userId: string, groups: string[]) => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups/access-map`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, groups }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to assign groups');
+    return data;
+  },
+
+  // Get assigned groups for a specific user
+  getUserGroups: async (userId: string): Promise<{ groups: string[] }> => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups/user/${userId}/groups`);
+    if (!res.ok) throw new Error('Failed to get user groups');
+    return res.json();
   },
 };
 
@@ -2077,7 +2123,7 @@ export const trainingAPI = {
         method: 'GET',
       });
 
-       const data = await response.json();
+      const data = await response.json();
       console.log(data);
 
       return data;
@@ -2168,27 +2214,27 @@ export const trainingAPI = {
       });
       const data = await response.json();
       console.log(data);
-      
+
       return data;
 
     } catch (error) {
       console.error('Get training status error:', error);
       throw error;
     }
-   },
+  },
 
- getCompletedTrainingsByVisitor: async (contractorId: string) => {
-  try {
-    const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/${contractorId}/completed-trainings`)
-    const data = await response.json();
-    console.log(data);
-    
-    return data;
-  } catch (error) {
-    console.error('Get training status error:', error);
+  getCompletedTrainingsByVisitor: async (contractorId: string) => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/${contractorId}/completed-trainings`)
+      const data = await response.json();
+      console.log(data);
+
+      return data;
+    } catch (error) {
+      console.error('Get training status error:', error);
       throw error;
-  }
-},
+    }
+  },
 
   // New endpoint: Enroll visitor in training
   enrollVisitor: async (visitorId: string, trainingId: string, token: string): Promise<TrainingEnrollment> => {
