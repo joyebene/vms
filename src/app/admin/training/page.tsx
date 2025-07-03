@@ -167,7 +167,7 @@ export default function TrainingPage() {
 
       setEditForm(prev => {
         const updated = [...(prev.videos || [])];
-        updated[index] = { name: sanitized.name, url };
+        updated[index] = { name: sanitized.name, url: url! };
         return { ...prev, videos: updated };
       });
     } catch (err) {
