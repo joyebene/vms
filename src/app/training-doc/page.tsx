@@ -1,231 +1,135 @@
-// Updated TrainingPage.tsx
 'use client';
 
-import AppBar from '@/components/AppBar';
 import { useEffect, useState } from 'react';
-import { trainingAPI, Training } from '@/lib/api';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { trainingAPI, Training } from '@/lib/api';
+import { Loader2 } from 'lucide-react';
+import AppBar from '@/components/AppBar';
 
-export default function TrainingPage() {
-  const [trainings, setTrainings] = useState<Training[]>([]);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, Record<number, string>>>({});
-  const [showResults, setShowResults] = useState<Record<number, boolean>>({});
-  const [scores, setScores] = useState<Record<number, number>>({});
-  const [signedBooks, setSignedBooks] = useState<string[]>([]);
-  const [completedVideos, setCompletedVideos] = useState<Record<string, boolean>>({});
-  const [completedBooks, setCompletedBooks] = useState<Record<string, boolean>>({});
-  const router = useRouter();
+export default function VisitorCourseList() {
+    const [trainings, setTrainings] = useState<Training[]>([]);
+    const [completedIds, setCompletedIds] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
 
-  useEffect(() => {
-    const fetchTrainings = async () => {
-      try {
-        const response = await trainingAPI.getAllTrainings();
-        const activeTraining = response.filter((res: Training) => res.isActive === true);
-        setTrainings(activeTraining);
-      } catch (error) {
-        console.error('Failed to fetch training content:', error);
-      }
-    };
-    fetchTrainings();
-  }, []);
+    useEffect(() => {
+        const fetchTrainings = async () => {
+            const contractorId = localStorage.getItem('contractorId');
+            console.log(contractorId);
 
-  const handleOptionChange = (trainingIndex: number, questionIndex: number, selectedOption: string) => {
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [trainingIndex]: {
-        ...prev[trainingIndex],
-        [questionIndex]: selectedOption,
-      },
-    }));
-  };
+            if (!contractorId) {
+                alert('Contractor not identified. Please check in first.');
+                router.push('/check-in');
+                return;
+            }
 
-  const handleQuizSubmit = async (trainingIndex: number) => {
-    const training = trainings[trainingIndex];
+            try {
+                const all: Training[] = await trainingAPI.getAllTrainings();
+                const completed: Training[] = await trainingAPI.getCompletedTrainingsByVisitor(contractorId);
+                console.log(all);
 
-    if (training.videos?.length && !completedVideos[training._id]) {
-      return alert('Please complete all videos before taking the quiz.');
+                setTrainings(all.filter(t => t.isActive));
+                setCompletedIds(completed.map(c => c._id));
+            } catch (error) {
+                console.error('Failed to load trainings or completions:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchTrainings();
+    }, [router]);
+
+    const progressPercent = trainings.length
+        ? Math.round((completedIds.length / trainings.length) * 100)
+        : 0;
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center py-20 text-gray-600">
+                <Loader2 className="animate-spin h-6 w-6 mr-2" />
+                Loading trainings...
+            </div>
+        );
     }
 
-    if (training.books?.length && !training.books.every(b => completedBooks[`${training._id}-${b.name}`])) {
-      return alert('Please sign all books before taking the quiz.');
-    }
+    return (
+        <>
+            <AppBar />
 
-    setShowResults((prev) => ({ ...prev, [trainingIndex]: true }));
+            <div className="px-4 mt-8 md:mt-12">
+                <h1 className="text-2xl font-bold mb-4 text-center">Your Training Progress</h1>
 
-    const quizQuestions = training.questions || [];
-    const selected = selectedAnswers[trainingIndex] || {};
-    let correct = 0;
-
-    quizQuestions.forEach((q, i) => {
-      const selectedOption = selected[i];
-      const correctOption = q.options[q.answer];
-      if (selectedOption === correctOption) correct++;
-    });
-
-    const total = quizQuestions.length;
-    const percentage = Math.round((correct / total) * 100);
-    setScores((prev) => ({ ...prev, [trainingIndex]: percentage }));
-
-    try {
-      await fetch('/api/quiz/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          answers: selected,
-          score: percentage,
-          trainingId: training._id,
-        }),
-      });
-    } catch (error) {
-      console.error('Failed to submit quiz results:', error);
-    }
-  };
-
-  const handleVideoComplete = (trainingId: string) => {
-    setCompletedVideos((prev) => ({ ...prev, [trainingId]: true }));
-  };
-
-  const handleBookRead = (trainingId: string, bookName: string) => {
-    const key = `${trainingId}-${bookName}`;
-    if (!signedBooks.includes(key)) {
-      setSignedBooks([...signedBooks, key]);
-      setCompletedBooks((prev) => ({ ...prev, [key]: true }));
-    }
-  };
-
-  const passedAnyTraining = Object.values(scores).some(score => score >= 70);
-
-  const handleRedoTraining = () => {
-    setSelectedAnswers({});
-    setShowResults({});
-    setScores({});
-    setCompletedVideos({});
-    setSignedBooks([]);
-    setCompletedBooks({});
-  };
-
-  const isTrainingUnlocked = (index: number) => {
-    if (index === 0) return true;
-    return scores[index - 1] >= 70;
-  };
-
-  const handleCompleteTraining = async () => {
-    const contractorId = localStorage.getItem('contractorId');
-    if (!contractorId) {
-      alert('Missing contractor ID. Please re-check in.');
-      return;
-    }
-
-    const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
-    const averageScore = Math.round(totalScore / Object.values(scores).length);
-
-    try {
-      await trainingAPI.submitTraining(contractorId, averageScore);
-      alert('✅ Training completed!');
-      router.push("/");
-      window.location.href = '/';
-    } catch (err) {
-      console.error(err);
-      alert('❌ Failed to complete training.');
-    }
-  };
-
-  return (
-    <div>
-      <AppBar />
-      <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-10">
-        <h1 className="text-4xl font-bold text-center mb-8">Training Center</h1>
-
-        {trainings.map((training, index) => (
-          <div key={training._id} className="space-y-8">
-            {!isTrainingUnlocked(index) ? (
-              <div className="bg-yellow-100 border p-4 rounded">
-                <p className="text-yellow-700">Complete the previous training to unlock this one.</p>
-              </div>
-            ) : (
-              <>
-                <section className="bg-white border rounded-2xl p-6 shadow-lg">
-                  <h2 className="text-2xl font-semibold mb-4">{training.title} - Videos</h2>
-                  {training.videos?.length ? training.videos.map((video, i) => (
-                    <div key={i} className="mt-4">
-                      <p>{video.name}</p>
-                      <video
-                        controls
-                        className="w-full rounded-md h-40"
-                        onEnded={() => handleVideoComplete(training._id)}
-                      >
-                        <source src={video.url} type="video/mp4" />
-                      </video>
+                {/* Progress Bar */}
+                <div className="max-w-xl mx-auto mb-8">
+                    <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-green-600 transition-all duration-500"
+                            style={{ width: `${progressPercent}%` }}
+                        ></div>
                     </div>
-                  )) : <p>No videos available</p>}
-                </section>
+                    <p className="text-sm text-gray-600 mt-1 text-center">{progressPercent}% completed</p>
+                </div>
 
-                <section className="bg-white border rounded-2xl p-6 shadow-lg">
-                  <h2 className="text-2xl font-semibold mb-4">{training.title} - Books</h2>
-                  {training.books?.length ? training.books.map((book, i) => (
-                    <div key={i}>
-                      <p className="font-medium">{book.name}</p>
-                      <a href={book.url} target="_blank" className="text-blue-600">📖 Read</a>
-                      <a href={book.url.replace('/upload/', `/upload/fl_attachment:${encodeURIComponent(book.name)}/`)} className="ml-4 text-green-600">📥 Download</a>
-                      {!completedBooks[`${training._id}-${book.name}`] && (
-                        <button onClick={() => handleBookRead(training._id, book.name)} className="ml-4 text-purple-600">✍️ Sign Book</button>
-                      )}
-                    </div>
-                  )) : <p>No books available</p>}
-                </section>
+                {/* Training Grid */}
+                <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {trainings.map((training, index) => {
+                        const isCompleted = completedIds.includes(training._id);
+                        const isLocked =
+                            index > 0 && !completedIds.includes(trainings[index - 1]._id);
 
-                <section className="bg-white border rounded-2xl p-6 shadow-lg">
-                  <h2 className="text-2xl font-semibold mb-4">{training.title} - Quiz</h2>
-                  {training.questions?.length ? (
-                    <form onSubmit={(e) => { e.preventDefault(); handleQuizSubmit(index); }}>
-                      {training.questions.map((q, i) => (
-                        <div key={i} className="mb-4">
-                          <p>{i + 1}. {q.question}</p>
-                          {q.options.map((opt, j) => (
-                            <label key={j} className="block">
-                              <input
-                                type="radio"
-                                name={`training-${index}-q-${i}`}
-                                value={opt}
-                                checked={selectedAnswers[index]?.[i] === opt}
-                                onChange={() => handleOptionChange(index, i, opt)}
-                              /> {opt}
-                            </label>
-                          ))}
-                          {showResults[index] && (
-                            <p className={selectedAnswers[index]?.[i] === q.options[q.answer] ? 'text-green-600' : 'text-red-600'}>
-                              {selectedAnswers[index]?.[i] === q.options[q.answer] ? '✅ Correct' : `❌ Correct: ${q.options[q.answer]}`}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="submit"
-                        disabled={
-                          Boolean(training.videos?.length && !completedVideos[training._id]) ||
-                          Boolean(training.books?.length && !training.books.every((b) => completedBooks[`${training._id}-${b.name}`]))
-                        }
-                        className="px-6 py-2 rounded-full bg-green-600 text-white disabled:bg-gray-300"
-                      >
-                        Submit Quiz
-                      </button>
-                      {scores[index] !== undefined && <p className="mt-4">Score: {scores[index]}%</p>}
-                    </form>
-                  ) : <p>No quiz available</p>}
-                </section>
-              </>
-            )}
-          </div>
-        ))}
+                        return (
+                            <div
+                                key={training._id}
+                                className={`p-4 border rounded-lg transition shadow-sm ${isCompleted
+                                    ? 'bg-green-50 border-green-300'
+                                    : 'bg-white border-gray-200'
+                                    } ${isLocked ? 'opacity-50 pointer-events-none' : 'hover:shadow-lg'}`}
+                            >
+                                <Link href={`/training-doc/${training._id}`}>
+                                    <h2 className="text-xl font-semibold text-blue-700 mb-1">{training.title}</h2>
+                                    <p className="text-gray-600 text-sm mb-2">{training.description}</p>
+                                    <p className="text-gray-500 text-xs mt-1 mb-2">
+                                        Created on {new Date(training.createdAt).toLocaleDateString(undefined, {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
 
-        <div className="text-center mt-10">
-          {passedAnyTraining ? (
-            <button type="button" className="bg-blue-600 text-white px-6 py-2 rounded-full" onClick={handleCompleteTraining}>🎉 Finish</button>
-          ) : (
-            <button type="button" onClick={handleRedoTraining} className="bg-red-600 text-white px-6 py-2 rounded-full">🔁 Redo Training</button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+
+                                    {/* Type */}
+                                    <span className="inline-block text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full capitalize">
+                                        {training.type}
+                                    </span>
+
+                                    {/* Status */}
+                                    {isCompleted && (
+                                        <p className="text-green-700 text-xs font-medium mt-2">✔ Completed</p>
+                                    )}
+                                    {isLocked && (
+                                        <p className="text-red-600 text-xs font-medium mt-2">🔒 Locked</p>
+                                    )}
+
+                                    {/* ✅ Start Training Button */}
+                                    {!isCompleted && !isLocked && (
+                                        <div className="mt-4 sm:mt-6">
+                                            <Link
+                                                href={`/training-doc/${training._id}`}
+                                                className="inline-block bg-blue-600 text-white text-[12px] sm:text-sm font-medium px-3 sm:px-4 py-2 rounded hover:bg-blue-700 transition"
+                                            >
+                                                ▶ Start Training
+                                            </Link>
+                                        </div>
+                                    )}
+                                </Link>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </>
+
+    );
 }

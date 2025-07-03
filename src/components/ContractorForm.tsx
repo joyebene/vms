@@ -342,7 +342,7 @@ export default function ContractorForm({ form, handleChange, handleSubmit, setFo
 
       // ✅ Don't rely on setForm here — just pass updatedForm directly
       handleSubmit(e, updatedForm);
-
+      setLoading(false);
      
 
 

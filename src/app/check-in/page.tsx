@@ -70,7 +70,7 @@ type VisitorFormData = {
 };
 
 
-const defaultVisitorForm = (formType: string): VisitorFormData  => ({
+const defaultVisitorForm = (formType: string): VisitorFormData => ({
   firstName: '',
   lastName: '',
   phone: '',
@@ -84,7 +84,7 @@ const defaultVisitorForm = (formType: string): VisitorFormData  => ({
   visitEndDate: new Date().toISOString().slice(0, 16),
   purpose: '',
   agreed: 'off',
-  pics: '', 
+  pics: '',
 });
 
 const defaultContractorForm = (formType: string): FormData => ({
@@ -112,30 +112,30 @@ export default function FormPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [settings, setSettings] = useState<SystemSettingsType>({
-      visitorPhotoRequired: false,
-      trainingRequired: false,
-    });
-    const router = useRouter();
+    visitorPhotoRequired: false,
+    trainingRequired: false,
+  });
+  const router = useRouter();
 
-     useEffect(() => {
-        fetchSettings();
-      }, []);
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
-    const fetchSettings = async () => {
-    
-        try {
-          const systemSettings = await adminAPI.getSystemSettings();
-    
-          // Ensure all properties are present using fallback/default values
-          setSettings({
-            visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
-            trainingRequired: systemSettings?.trainingRequired ?? false,
-          });
-        } catch (err) {
-          console.error('Error fetching system settings:', err);
-          toast.error(err instanceof Error ? err.message : 'Failed to load system settings');
-        }
-      };
+  const fetchSettings = async () => {
+
+    try {
+      const systemSettings = await adminAPI.getSystemSettings();
+
+      // Ensure all properties are present using fallback/default values
+      setSettings({
+        visitorPhotoRequired: systemSettings?.visitorPhotoRequired ?? false,
+        trainingRequired: systemSettings?.trainingRequired ?? false,
+      });
+    } catch (err) {
+      console.error('Error fetching system settings:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to load system settings');
+    }
+  };
 
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export default function FormPage() {
   };
 
   console.log(contractorForm);
-  
+
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, updatedFormOverride?: FormData) => {
@@ -187,8 +187,8 @@ export default function FormPage() {
       const data = await response.json();
       console.log(`${formType} form submitted:`, data);
 
-      if(!isVisitor) {
-        localStorage.setItem('contractorId', data._id);
+      if (!isVisitor) {
+        localStorage.setItem('contractorId', data.contractor._id);
       }
 
       if (isVisitor) {
@@ -204,14 +204,15 @@ export default function FormPage() {
         alert("Visitor Form submitted Successfully!");
       } else {
         alert("Redirecting You to Training Page!");
-        if (settings.trainingRequired) {
-          router.push("/training-doc")
-          
-        } else {
-          alert("Contractor Form Submitted")
-          router.push('/')
-        }
-      
+        setTimeout(() => {
+          if (settings.trainingRequired) {
+            router.push("/training-doc");
+          } else {
+            alert("Contractor Form Submitted");
+            router.push('/');
+          }
+        }, 2000);
+
       }
 
 

@@ -711,6 +711,7 @@ export type Training = {
     options: string[];
     answer: number; // important!
   }[];
+  createdAt: Date;
 };
 
 
@@ -853,8 +854,8 @@ export const notificationAPI = {
       });
 
       const data = await response.json();
-     return data
-      
+      return data
+
     } catch (error) {
       console.error('Get notification history error:', error);
       throw error;
@@ -870,9 +871,9 @@ export const notificationAPI = {
           'Authorization': `Bearer ${token}`,
         },
       });
-     const data = await response.json();
-     return data
-      
+      const data = await response.json();
+      return data
+
     } catch (error) {
       console.error('Get notification settings error:', error);
       throw error;
@@ -1564,8 +1565,8 @@ export const adminAPI = {
           'Authorization': `Bearer ${token}`,
         },
       });
-     const data = await response.json();
-     return data;
+      const data = await response.json();
+      return data;
       // return handleResponse(response);
     } catch (error) {
       console.error('Get system settings error:', error);
@@ -1574,7 +1575,7 @@ export const adminAPI = {
   },
 
   // Update system settings
-  updateSystemSettings: async ( token: string, settings: SystemSettings | null ): Promise<{ message: string }> => {
+  updateSystemSettings: async (token: string, settings: SystemSettings | null): Promise<{ message: string }> => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/admin/settings`, {
         method: 'PUT',
@@ -2070,16 +2071,16 @@ export const trainingAPI = {
     }
   },
 
-  getTrainingById: async (trainingId: string, token: string): Promise<Training> => {
+  getTrainingById: async (trainingId: string): Promise<Training> => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/${trainingId}`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
 
-      return handleResponse(response);
+       const data = await response.json();
+      console.log(data);
+
+      return data;
     } catch (error) {
       console.error('Get training by ID error:', error);
       throw error;
@@ -2098,7 +2099,7 @@ export const trainingAPI = {
       });
       const data = await response.json();
       console.log(data);
-      
+
       return data;
       // return handleResponse(response);
     } catch (error) {
@@ -2132,7 +2133,7 @@ export const trainingAPI = {
         },
         body: JSON.stringify({ contractorId, score }),
       });
-     
+
       return handleResponse(response);
     } catch (error) {
       console.error('Submit training error:', error);
@@ -2155,6 +2156,39 @@ export const trainingAPI = {
       throw error;
     }
   },
+
+  markTrainingCompleted: async (id: string, trainingId: string, title: string, score?: number) => {
+    try {
+      const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/${id}/complete-training`, {
+        method: 'POST', // or 'PUT', depending on the API
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ trainingId, score, title }),
+      });
+      const data = await response.json();
+      console.log(data);
+      
+      return data;
+
+    } catch (error) {
+      console.error('Get training status error:', error);
+      throw error;
+    }
+   },
+
+ getCompletedTrainingsByVisitor: async (contractorId: string) => {
+  try {
+    const response = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/forms/${contractorId}/completed-trainings`)
+    const data = await response.json();
+    console.log(data);
+    
+    return data;
+  } catch (error) {
+    console.error('Get training status error:', error);
+      throw error;
+  }
+},
 
   // New endpoint: Enroll visitor in training
   enrollVisitor: async (visitorId: string, trainingId: string, token: string): Promise<TrainingEnrollment> => {
@@ -2193,16 +2227,16 @@ export const trainingAPI = {
   },
 
   toggleTrainingStatus: async (trainingId: string, token: string | null) => {
-  const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/${trainingId}/toggle`, {
-    method: 'PATCH',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/training/${trainingId}/toggle`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-  if (!res.ok) throw new Error('Failed to toggle status');
-  return res.json();
-}
+    if (!res.ok) throw new Error('Failed to toggle status');
+    return res.json();
+  }
 
 
 
