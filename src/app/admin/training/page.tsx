@@ -189,7 +189,7 @@ export default function TrainingPage() {
 
       setEditForm(prev => {
         const updated = [...(prev.books || [])];
-        updated[index] = { name: sanitized.name, url };
+        updated[index] = { name: sanitized.name, url: url! };
         return { ...prev, books: updated };
       });
     } catch (err) {
@@ -483,6 +483,7 @@ export default function TrainingPage() {
                     type="file"
                     accept="video/*"
                     className="hidden"
+                    placeholder='video'
                     onChange={(e) => handleEditVideoUpload(idx, e)}
                     disabled={videoUploadLoading}
                   />
