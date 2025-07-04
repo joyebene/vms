@@ -1665,30 +1665,42 @@ export const adminAPI = {
   },
 
   // Fetch all groups
-  fetchGroups: async (): Promise<Group[]> => {
-    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups`);
-    if (!res.ok) throw new Error('Failed to fetch groups');
-    return res.json();
+  fetchGroups: async (token: string): Promise<Group[]> => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, },
+    });
+
+    const data = await res.json();
+    console.log(data);
+    
+    if (!res.ok) throw new Error(data.error || 'Failed to create group');
+    return data;
   },
 
   // Create a new group
-  createGroup: async (group: { name: string; description?: string }) => {
+  createGroup: async (group: { name: string; description?: string }, token: string,) => {
     const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify(group),
     });
 
     const data = await res.json();
+    console.log(data);
+    
     if (!res.ok) throw new Error(data.error || 'Failed to create group');
     return data;
   },
 
   // Assign groups to a user or host
-  assignGroupsToUser: async (userId: string, groups: string[]) => {
+  assignGroupsToUser: async (userId: string, token: string, groups: string[]) => {
     const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups/access-map`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, },
       body: JSON.stringify({ userId, groups }),
     });
 
@@ -1698,11 +1710,29 @@ export const adminAPI = {
   },
 
   // Get assigned groups for a specific user
-  getUserGroups: async (userId: string): Promise<{ groups: string[] }> => {
-    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups/user/${userId}/groups`);
+  getUserGroups: async (userId: string, token: string,): Promise<{ groups: string[] }> => {
+    const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups/user/${userId}/groups`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, },
+    });
+
     if (!res.ok) throw new Error('Failed to get user groups');
     return res.json();
   },
+
+  getGroupMembers: async (groupName: string, token: string) => {
+  const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/groups/${groupName}/members`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to get group members');
+  return data;
+},
+
 };
 
 // Analytics API

@@ -2,19 +2,32 @@
 
 import { useState } from 'react';
 import { adminAPI } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 
-export default function GroupCreator() {
+type Props = {
+  refreshGroups: () => void;
+};
+
+
+export default function GroupCreator({ refreshGroups }: Props) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const {token} = useAuth();
 
   const createGroup = async () => {
     setLoading(true);
+
+    if (!token) {
+  console.error('No token found. User might not be authenticated.');
+  return;
+}
     try {
-      const group = await adminAPI.createGroup({ name, description });
+      const group = await adminAPI.createGroup({ name, description }, token);
       alert(`Group '${group.name}' created!`);
       setName('');
       setDescription('');
+       refreshGroups();
     } catch (err: any) {
       alert('Failed: ' + err.message);
     } finally {

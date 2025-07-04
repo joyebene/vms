@@ -16,6 +16,8 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>('');
   const [departmentFilter, setDepartmentFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [userGroups, setUserGroups] = useState<Record<string, string[]>>({});
+
   const { token, user } = useAuth();
 
   useEffect(() => {
@@ -33,8 +35,22 @@ export default function UsersPage() {
     try {
       const userData = await adminAPI.getUsers(token);
       console.log(userData);
-      
+
       setUsers(userData);
+
+      // Fetch groups for each user
+      const groupMap: Record<string, string[]> = {};
+      for (const usr of userData) {
+        try {
+          const res = await adminAPI.getUserGroups(usr._id, token);
+          groupMap[usr._id] = res.groups;
+        } catch (groupErr) {
+          console.error(`Failed to fetch groups for user ${usr._id}`, groupErr);
+          groupMap[usr._id] = [];
+        }
+      }
+
+      setUserGroups(groupMap);
     } catch (err) {
       console.error('Error fetching users:', err);
       setError(err instanceof Error ? err.message : 'Failed to load users');
@@ -181,6 +197,7 @@ export default function UsersPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Groups</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
@@ -215,6 +232,12 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">{department}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {userGroups[user._id]?.length > 0
+                          ? userGroups[user._id].join(', ')
+                          : <span className="italic text-gray-400">None</span>}
+                      </td>
+
                       <td className="px-6 py-4">
                         <span className={`px-2 inline-flex text-xs font-semibold rounded-full ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                           {isActive ? 'Active' : 'Inactive'}
@@ -229,7 +252,7 @@ export default function UsersPage() {
                             onClick={() => handleDeleteUser(user?._id ?? '')}
                             className="text-red-600 hover:text-red-900"
                           >
-                           { <Trash2 className="h-5 w-5" /> }
+                            {<Trash2 className="h-5 w-5" />}
                           </button>
                         </div>
                       </td>

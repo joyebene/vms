@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { adminAPI, User } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 
 
 type Group = {
@@ -14,14 +15,19 @@ export default function GroupMapper() {
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedUser, setSelectedUser] = useState('');
     const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+    const { token } = useAuth();
 
     // Load users and groups on mount
     useEffect(() => {
         const load = async () => {
+            if (!token) {
+                console.error('No token found. User might not be authenticated.');
+                return;
+            }
             try {
                 const [usersData, groupsData] = await Promise.all([
                     adminAPI.getUsers(),
-                    adminAPI.fetchGroups(),
+                    adminAPI.fetchGroups(token),
                 ]);
                 setUsers(usersData);
                 setGroups(groupsData);
@@ -35,8 +41,12 @@ export default function GroupMapper() {
 
     // Assign groups to selected user
     const handleAssign = async () => {
+        if (!token) {
+            console.error('No token found. User might not be authenticated.');
+            return;
+        }
         try {
-            await adminAPI.assignGroupsToUser(selectedUser, selectedGroups);
+            await adminAPI.assignGroupsToUser(selectedUser, token, selectedGroups);
             alert('Groups assigned!');
             setSelectedUser('');
             setSelectedGroups([]);
@@ -46,8 +56,8 @@ export default function GroupMapper() {
     };
 
     return (
-        <div className="p-4">
-            <h1 className="text-xl font-bold mb-4">Group Mapper</h1>
+        <div className="p-4 my-4 md:my-6">
+            <h1 className="text-xl font-semibold mb-4">Group Mapper</h1>
 
             <label htmlFor='user' className="block mb-2">Select User:</label>
             <select
